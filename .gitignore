@@ -51,8 +51,7 @@ contracts/cache
 # Coverage
 lcov.info
 
-# .data folder
+.data folder
 .designs/
-
 .claude/
 .cursor/
