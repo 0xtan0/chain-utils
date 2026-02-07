@@ -6,3 +6,6 @@ export type { PreparedTransaction, SignedTransaction, WriteOptions } from "./typ
 
 // ---- Multicall Types ----
 export type { MulticallItemResult, BatchResult, CrossChainBatchResult } from "./types/multicall.js";
+
+// ---- Errors ----
+export { ChainUtilsFault } from "./errors/base.js";
