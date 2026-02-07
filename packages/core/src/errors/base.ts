@@ -3,7 +3,7 @@
  * Provides structured error info compatible with viem's error.walk() pattern.
  */
 export class ChainUtilsFault extends Error {
-    override readonly name = "ChainUtilsFault";
+    override readonly name: string = "ChainUtilsFault";
     readonly shortMessage: string;
     readonly details: string;
     readonly metaMessages?: string[];

@@ -9,3 +9,4 @@ export type { MulticallItemResult, BatchResult, CrossChainBatchResult } from "./
 
 // ---- Errors ----
 export { ChainUtilsFault } from "./errors/base.js";
+export { UnsupportedChain, RpcFailure, MulticallNotSupported } from "./errors/chain.js";
