@@ -1,5 +1,5 @@
 import type { ERC20Abi } from "@/abi/erc20Abi.js";
-import type { ERC20MultichainClient, ERC20WriteClient, IERC20Read } from "@/types/client.js";
+import type { ERC20WriteClient, IERC20MultichainClient, IERC20Read } from "@/types/client.js";
 import type { BatchAllowanceResult, BatchBalanceResult } from "@/types/query.js";
 import type {
     TokenAllowance,
@@ -96,8 +96,8 @@ describe("ERC20WriteClient interface", () => {
     });
 });
 
-describe("ERC20MultichainClient interface", () => {
-    type TestClient = ERC20MultichainClient<1 | 10>;
+describe("IERC20MultichainClient interface", () => {
+    type TestClient = IERC20MultichainClient<1 | 10>;
 
     it("exposes multichain, chainIds, getClient, hasChain", () => {
         expectTypeOf<TestClient["multichain"]>().toEqualTypeOf<

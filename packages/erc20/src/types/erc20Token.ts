@@ -1,7 +1,8 @@
 import type { CrossChainBatchResult } from "@0xtan0/chain-utils/core";
 import type { Address } from "viem";
 
-import type { TokenAllowance, TokenBalance, TokenMetadata, TokenReference } from "./token.js";
+import type { BatchAllowanceResult, BatchBalanceResult } from "./query.js";
+import type { TokenBalance } from "./token.js";
 
 /**
  * A bound ERC20 token — carries both per-chain addresses and RPC connections.
@@ -13,21 +14,17 @@ export interface ERC20Token<TChainId extends number> {
     /** Token symbol (e.g. "USDC"). */
     readonly symbol: string;
 
-    /** Optional pre-set metadata (avoids on-chain fetch when present). */
-    readonly name?: string;
-    readonly decimals?: number;
+    /** Token name (e.g. "USD Coin"). */
+    readonly name: string;
+
+    /** Token decimals (e.g. 6). */
+    readonly decimals: number;
 
     /** All chain IDs this token is bound on. */
     readonly chainIds: ReadonlyArray<TChainId>;
 
     /** Get the token's address on a specific chain. */
-    address(chainId: TChainId): Address;
-
-    /** Check if this token is bound on the given chain. */
-    hasChain(chainId: number): boolean;
-
-    /** Build a TokenReference for a specific chain. */
-    toTokenReference(chainId: TChainId): TokenReference;
+    getAddress(chainId: TChainId): Address;
 
     // ---- On-chain reads (uses the bound MultichainClient RPCs) ----
 
@@ -41,21 +38,19 @@ export interface ERC20Token<TChainId extends number> {
     ): Promise<CrossChainBatchResult<TokenBalance>>;
 
     /**
+     * Fetch balances for multiple holders across all bound chains (or a subset).
+     */
+    getBalances(
+        holders: ReadonlyArray<Address>,
+        chainIds?: ReadonlyArray<TChainId>,
+    ): Promise<CrossChainBatchResult<BatchBalanceResult>>;
+
+    /**
      * Fetch allowance across all bound chains (or a subset).
      */
     getAllowance(
         owner: Address,
         spender: Address,
         chainIds?: ReadonlyArray<TChainId>,
-    ): Promise<CrossChainBatchResult<TokenAllowance>>;
-
-    /**
-     * Fetch token metadata from a specific chain.
-     * If name/decimals were set in the definition, returns them
-     * without an RPC call.
-     */
-    getMetadata(chainId?: TChainId): Promise<TokenMetadata>;
-
-    /** Fetch total supply on a specific chain. */
-    getTotalSupply(chainId: TChainId): Promise<bigint>;
+    ): Promise<CrossChainBatchResult<BatchAllowanceResult>>;
 }

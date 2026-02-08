@@ -117,7 +117,7 @@ export interface ERC20WriteClient extends IERC20Read {
  * TChainId is a union of literal chain IDs captured at creation time,
  * providing compile-time safety.
  */
-export interface ERC20MultichainClient<TChainId extends number> {
+export interface IERC20MultichainClient<TChainId extends number> {
     /** The underlying generic multichain contract. */
     readonly multichain: MultichainContract<ERC20Abi, TChainId>;
 
