@@ -54,4 +54,5 @@ export { ERC20WriteClientImpl, createERC20WriteClient } from "./client/erc20Writ
 export type { ITokenDefinition } from "./types/tokenDefinition.js";
 export type { ITokenBuilder, TokenBuilderOptions } from "./token/tokenBuilder.js";
 export { TokenDefinition, TokenBuilder, defineToken } from "./token/tokenBuilder.js";
+export { USDC, USDT } from "./token/common.js";
 export type { ERC20Token } from "./types/erc20Token.js";

@@ -110,7 +110,7 @@ export class TokenBuilder<TChainId extends number = never> {
     constructor(symbol: string, options?: TokenBuilderOptions, addresses?: Map<number, Address>) {
         this.#symbol = symbol;
         this.#options = options;
-        this.#addresses = addresses ?? new Map();
+        this.#addresses = addresses ?? new Map<number, Address>();
     }
 
     onChain<TId extends number>(
