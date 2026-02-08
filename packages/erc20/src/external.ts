@@ -56,3 +56,5 @@ export type { ITokenBuilder, TokenBuilderOptions } from "./token/tokenBuilder.js
 export { TokenDefinition, TokenBuilder, defineToken } from "./token/tokenBuilder.js";
 export { USDC, USDT } from "./token/common.js";
 export type { ERC20Token } from "./types/erc20Token.js";
+export { ERC20BoundToken } from "./token/erc20Token.js";
+export { ERC20TokenBuilder } from "./token/erc20TokenBuilder.js";
