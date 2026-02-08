@@ -5,13 +5,7 @@ import { http } from "viem";
 import { mainnet, optimism } from "viem/chains";
 import { describe, expect, it } from "vitest";
 
-function mockPublicClient(chainId: number): PublicClient<Transport, Chain> {
-    return {
-        chain: { id: chainId },
-        transport: {},
-        request: () => {},
-    } as unknown as PublicClient<Transport, Chain>;
-}
+import { mockPublicClient } from "../mocks/publicClient.js";
 
 describe("MultichainClient", () => {
     describe("constructor", () => {
