@@ -2,7 +2,7 @@ import type { BatchResult, CrossChainBatchResult, MulticallItemResult } from "@/
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 describe("MulticallItemResult", () => {
-    it("should narrow on success status", () => {
+    it("narrows on success status", () => {
         const result: MulticallItemResult<bigint> = {
             status: "success",
             result: 100n,
@@ -14,7 +14,7 @@ describe("MulticallItemResult", () => {
         }
     });
 
-    it("should narrow on failure status", () => {
+    it("narrows on failure status", () => {
         const error = new Error("call failed");
         const result: MulticallItemResult<bigint> = {
             status: "failure",
@@ -27,7 +27,7 @@ describe("MulticallItemResult", () => {
         }
     });
 
-    it("should work with different generic types", () => {
+    it("works with different generic types", () => {
         const stringResult: MulticallItemResult<string> = {
             status: "success",
             result: "hello",
@@ -40,7 +40,7 @@ describe("MulticallItemResult", () => {
 });
 
 describe("BatchResult", () => {
-    it("should have chainId and results array", () => {
+    it("has chainId and results array", () => {
         const batch: BatchResult<bigint> = {
             chainId: 1,
             results: [
@@ -53,7 +53,7 @@ describe("BatchResult", () => {
         expect(batch.results).toHaveLength(2);
     });
 
-    it("should use ReadonlyArray for results", () => {
+    it("uses ReadonlyArray for results", () => {
         const batch: BatchResult<string> = {
             chainId: 10,
             results: [],
@@ -64,7 +64,7 @@ describe("BatchResult", () => {
 });
 
 describe("CrossChainBatchResult", () => {
-    it("should have resultsByChain as ReadonlyMap", () => {
+    it("has resultsByChain as ReadonlyMap", () => {
         const result: CrossChainBatchResult<bigint> = {
             resultsByChain: new Map([
                 [1, 100n],
@@ -78,7 +78,7 @@ describe("CrossChainBatchResult", () => {
         expectTypeOf(result.resultsByChain).toEqualTypeOf<ReadonlyMap<number, bigint>>();
     });
 
-    it("should track failed chains", () => {
+    it("tracks failed chains", () => {
         const result: CrossChainBatchResult<bigint> = {
             resultsByChain: new Map([[1, 100n]]),
             failedChains: [{ chainId: 10, error: new Error("rpc down") }],

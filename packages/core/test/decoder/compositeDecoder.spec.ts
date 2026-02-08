@@ -12,7 +12,7 @@ function mockDecoder(fn: (rawData: Hex) => ChainUtilsFault | null): ErrorDecoder
 describe("CompositeErrorDecoder", () => {
     const rawData: Hex = "0x08c379a0";
 
-    it("should return result from a single matching decoder", () => {
+    it("returns result from a single matching decoder", () => {
         const expected = new ContractReverted({ decodedMessage: "matched" });
         const decoder = new CompositeErrorDecoder([mockDecoder(() => expected)]);
 
@@ -21,7 +21,7 @@ describe("CompositeErrorDecoder", () => {
         expect(result).toBe(expected);
     });
 
-    it("should return the first non-null result (first-match-wins)", () => {
+    it("returns the first non-null result (first-match-wins)", () => {
         const first = new ContractReverted({ decodedMessage: "first" });
         const second = new ContractReverted({ decodedMessage: "second" });
 
@@ -35,7 +35,7 @@ describe("CompositeErrorDecoder", () => {
         expect(result).toBe(first);
     });
 
-    it("should skip decoders that return null", () => {
+    it("skips decoders that return null", () => {
         const expected = new ContractReverted({ decodedMessage: "third" });
 
         const decoder = new CompositeErrorDecoder([
@@ -49,7 +49,7 @@ describe("CompositeErrorDecoder", () => {
         expect(result).toBe(expected);
     });
 
-    it("should fall back to ContractReverted when all decoders return null", () => {
+    it("falls back to ContractReverted when all decoders return null", () => {
         const decoder = new CompositeErrorDecoder([
             mockDecoder(() => null),
             mockDecoder(() => null),
@@ -61,7 +61,7 @@ describe("CompositeErrorDecoder", () => {
         expect((result as ContractReverted).rawData).toBe(rawData);
     });
 
-    it("should fall back to ContractReverted with empty decoder list", () => {
+    it("falls back to ContractReverted with empty decoder list", () => {
         const decoder = new CompositeErrorDecoder([]);
 
         const result = decoder.decode(rawData);
@@ -70,7 +70,7 @@ describe("CompositeErrorDecoder", () => {
         expect((result as ContractReverted).rawData).toBe(rawData);
     });
 
-    it("should return a ChainUtilsFault from the fallback", () => {
+    it("returns a ChainUtilsFault from the fallback", () => {
         const decoder = new CompositeErrorDecoder([]);
 
         const result = decoder.decode(rawData);
@@ -78,7 +78,7 @@ describe("CompositeErrorDecoder", () => {
         expect(result).toBeInstanceOf(ChainUtilsFault);
     });
 
-    it("should pass rawData to each decoder", () => {
+    it("passes rawData to each decoder", () => {
         const receivedData: Hex[] = [];
         const decoder = new CompositeErrorDecoder([
             mockDecoder((data) => {
@@ -96,7 +96,7 @@ describe("CompositeErrorDecoder", () => {
         expect(receivedData).toEqual([rawData, rawData]);
     });
 
-    it("should not call subsequent decoders after a match", () => {
+    it("does not call subsequent decoders after a match", () => {
         let secondCalled = false;
         const expected = new ContractReverted({ decodedMessage: "hit" });
 
@@ -113,7 +113,7 @@ describe("CompositeErrorDecoder", () => {
         expect(secondCalled).toBe(false);
     });
 
-    it("should implement ErrorDecoder interface", () => {
+    it("implements ErrorDecoder interface", () => {
         const composite: ErrorDecoder = new CompositeErrorDecoder([]);
 
         expect(typeof composite.decode).toBe("function");

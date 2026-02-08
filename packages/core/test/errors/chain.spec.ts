@@ -3,7 +3,7 @@ import { MulticallNotSupported, RpcFailure, UnsupportedChain } from "@/errors/ch
 import { describe, expect, it } from "vitest";
 
 describe("UnsupportedChain", () => {
-    it("should create with chainId", () => {
+    it("creates with chainId", () => {
         const error = new UnsupportedChain(42161);
 
         expect(error.chainId).toBe(42161);
@@ -12,7 +12,7 @@ describe("UnsupportedChain", () => {
         expect(error.shortMessage).toBe("Chain 42161 is not supported");
     });
 
-    it("should create with availableChainIds", () => {
+    it("creates with availableChainIds", () => {
         const error = new UnsupportedChain(999, {
             availableChainIds: [1, 10, 42161],
         });
@@ -22,14 +22,14 @@ describe("UnsupportedChain", () => {
         expect(error.message).toContain("Available chain IDs: 1, 10, 42161");
     });
 
-    it("should extend ChainUtilsFault", () => {
+    it("extends ChainUtilsFault", () => {
         const error = new UnsupportedChain(1);
 
         expect(error).toBeInstanceOf(ChainUtilsFault);
         expect(error).toBeInstanceOf(Error);
     });
 
-    it("should be walkable from a parent ChainUtilsFault", () => {
+    it("is walkable from a parent ChainUtilsFault", () => {
         const cause = new UnsupportedChain(1);
         const parent = new ChainUtilsFault("wrapped", { cause });
 
@@ -39,7 +39,7 @@ describe("UnsupportedChain", () => {
 });
 
 describe("RpcFailure", () => {
-    it("should create with chainId", () => {
+    it("creates with chainId", () => {
         const error = new RpcFailure("Connection refused", { chainId: 1 });
 
         expect(error.chainId).toBe(1);
@@ -49,7 +49,7 @@ describe("RpcFailure", () => {
         expect(error.message).toContain("Chain ID: 1");
     });
 
-    it("should create with rpcUrl", () => {
+    it("creates with rpcUrl", () => {
         const error = new RpcFailure("Timeout", {
             chainId: 10,
             rpcUrl: "https://rpc.example.com",
@@ -59,7 +59,7 @@ describe("RpcFailure", () => {
         expect(error.message).toContain("RPC URL: https://rpc.example.com");
     });
 
-    it("should create with cause", () => {
+    it("creates with cause", () => {
         const cause = new Error("socket hang up");
         const error = new RpcFailure("Request failed", {
             chainId: 1,
@@ -69,14 +69,14 @@ describe("RpcFailure", () => {
         expect(error.cause).toBe(cause);
     });
 
-    it("should extend ChainUtilsFault", () => {
+    it("extends ChainUtilsFault", () => {
         const error = new RpcFailure("fail", { chainId: 1 });
 
         expect(error).toBeInstanceOf(ChainUtilsFault);
         expect(error).toBeInstanceOf(Error);
     });
 
-    it("should be walkable from a parent ChainUtilsFault", () => {
+    it("is walkable from a parent ChainUtilsFault", () => {
         const cause = new RpcFailure("fail", { chainId: 1 });
         const parent = new ChainUtilsFault("wrapped", { cause });
 
@@ -86,7 +86,7 @@ describe("RpcFailure", () => {
 });
 
 describe("MulticallNotSupported", () => {
-    it("should create with chainId", () => {
+    it("creates with chainId", () => {
         const error = new MulticallNotSupported(56);
 
         expect(error.chainId).toBe(56);
@@ -94,14 +94,14 @@ describe("MulticallNotSupported", () => {
         expect(error.shortMessage).toBe("Multicall is not supported on chain 56");
     });
 
-    it("should extend ChainUtilsFault", () => {
+    it("extends ChainUtilsFault", () => {
         const error = new MulticallNotSupported(1);
 
         expect(error).toBeInstanceOf(ChainUtilsFault);
         expect(error).toBeInstanceOf(Error);
     });
 
-    it("should be walkable from a parent ChainUtilsFault", () => {
+    it("is walkable from a parent ChainUtilsFault", () => {
         const cause = new MulticallNotSupported(1);
         const parent = new ChainUtilsFault("wrapped", { cause });
 

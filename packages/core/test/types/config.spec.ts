@@ -4,7 +4,7 @@ import { mainnet } from "viem/chains";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 describe("ChainTransportConfig", () => {
-    it("should accept chain and transport", () => {
+    it("accepts chain and transport", () => {
         const config: ChainTransportConfig = {
             chain: mainnet,
             transport: http(),
@@ -13,7 +13,7 @@ describe("ChainTransportConfig", () => {
         expect(config.chain.id).toBe(1);
     });
 
-    it("should accept optional multicallAddress", () => {
+    it("accepts optional multicallAddress", () => {
         const config: ChainTransportConfig = {
             chain: mainnet,
             transport: http(),
@@ -25,7 +25,7 @@ describe("ChainTransportConfig", () => {
 });
 
 describe("ChainInput", () => {
-    it("should accept a PublicClient", () => {
+    it("accepts a PublicClient", () => {
         const client = createPublicClient({
             chain: mainnet,
             transport: http(),
@@ -35,7 +35,7 @@ describe("ChainInput", () => {
         expectTypeOf(input).toMatchTypeOf<ChainInput>();
     });
 
-    it("should accept a ChainTransportConfig", () => {
+    it("accepts a ChainTransportConfig", () => {
         const config: ChainTransportConfig = {
             chain: mainnet,
             transport: http(),

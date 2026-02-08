@@ -11,7 +11,7 @@ describe("MulticallPartialFailure", () => {
         { status: "failure", error: new Error("out of gas") },
     ];
 
-    it("should create with chainId and results", () => {
+    it("creates with chainId and results", () => {
         const error = new MulticallPartialFailure(1, mixedResults);
 
         expect(error.chainId).toBe(1);
@@ -19,14 +19,14 @@ describe("MulticallPartialFailure", () => {
         expect(error.name).toBe("MulticallPartialFailure");
     });
 
-    it("should compute failedCount and totalCount from results", () => {
+    it("computes failedCount and totalCount from results", () => {
         const error = new MulticallPartialFailure(1, mixedResults);
 
         expect(error.failedCount).toBe(2);
         expect(error.totalCount).toBe(4);
     });
 
-    it("should include counts in the message", () => {
+    it("includes counts in the message", () => {
         const error = new MulticallPartialFailure(42161, mixedResults);
 
         expect(error.shortMessage).toBe("Multicall on chain 42161 had 2/4 failures");
@@ -34,7 +34,7 @@ describe("MulticallPartialFailure", () => {
         expect(error.message).toContain("Failed: 2/4");
     });
 
-    it("should handle all-failure results", () => {
+    it("handles all-failure results", () => {
         const allFailed: ReadonlyArray<MulticallItemResult<unknown>> = [
             { status: "failure", error: new Error("a") },
             { status: "failure", error: new Error("b") },
@@ -45,7 +45,7 @@ describe("MulticallPartialFailure", () => {
         expect(error.totalCount).toBe(2);
     });
 
-    it("should handle single-failure results", () => {
+    it("handles single-failure results", () => {
         const singleFail: ReadonlyArray<MulticallItemResult<unknown>> = [
             { status: "success", result: 1n },
             { status: "failure", error: new Error("x") },
@@ -57,14 +57,14 @@ describe("MulticallPartialFailure", () => {
         expect(error.totalCount).toBe(3);
     });
 
-    it("should extend ChainUtilsFault", () => {
+    it("extends ChainUtilsFault", () => {
         const error = new MulticallPartialFailure(1, mixedResults);
 
         expect(error).toBeInstanceOf(ChainUtilsFault);
         expect(error).toBeInstanceOf(Error);
     });
 
-    it("should be walkable from a parent ChainUtilsFault", () => {
+    it("is walkable from a parent ChainUtilsFault", () => {
         const cause = new MulticallPartialFailure(1, mixedResults);
         const parent = new ChainUtilsFault("wrapped", { cause });
 
@@ -74,7 +74,7 @@ describe("MulticallPartialFailure", () => {
 });
 
 describe("MulticallBatchFailure", () => {
-    it("should create with chainId and batchSize", () => {
+    it("creates with chainId and batchSize", () => {
         const error = new MulticallBatchFailure(1, 10);
 
         expect(error.chainId).toBe(1);
@@ -82,7 +82,7 @@ describe("MulticallBatchFailure", () => {
         expect(error.name).toBe("MulticallBatchFailure");
     });
 
-    it("should include chain and batch info in message", () => {
+    it("includes chain and batch info in message", () => {
         const error = new MulticallBatchFailure(42161, 5);
 
         expect(error.shortMessage).toBe("Multicall batch of 5 calls failed on chain 42161");
@@ -90,27 +90,27 @@ describe("MulticallBatchFailure", () => {
         expect(error.message).toContain("Batch size: 5");
     });
 
-    it("should store the original cause", () => {
+    it("stores the original cause", () => {
         const cause = new Error("execution reverted");
         const error = new MulticallBatchFailure(1, 10, { cause });
 
         expect(error.cause).toBe(cause);
     });
 
-    it("should work without cause", () => {
+    it("works without cause", () => {
         const error = new MulticallBatchFailure(1, 10);
 
         expect(error.cause).toBeUndefined();
     });
 
-    it("should extend ChainUtilsFault", () => {
+    it("extends ChainUtilsFault", () => {
         const error = new MulticallBatchFailure(1, 10);
 
         expect(error).toBeInstanceOf(ChainUtilsFault);
         expect(error).toBeInstanceOf(Error);
     });
 
-    it("should be walkable from a parent ChainUtilsFault", () => {
+    it("is walkable from a parent ChainUtilsFault", () => {
         const cause = new MulticallBatchFailure(1, 10);
         const parent = new ChainUtilsFault("wrapped", { cause });
 
