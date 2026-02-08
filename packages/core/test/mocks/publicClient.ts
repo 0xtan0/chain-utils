@@ -35,6 +35,11 @@ export function mockPublicClient(
         request: () => {},
         readContract: vi.fn(),
         multicall: vi.fn(),
+        estimateFeesPerGas: vi.fn().mockResolvedValue({
+            maxFeePerGas: 1000000000n,
+            maxPriorityFeePerGas: 100000000n,
+        }),
+        getTransactionCount: vi.fn().mockResolvedValue(0),
         ...overrides,
     } as unknown as PublicClient<Transport, Chain>;
 }

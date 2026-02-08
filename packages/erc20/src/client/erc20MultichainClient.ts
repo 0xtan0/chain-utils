@@ -193,9 +193,7 @@ export class ERC20MultichainClient<TChainId extends number>
 }
 
 /** Create from pre-built PublicClients. */
-export function createERC20MultichainClient<
-    const TClients extends readonly PublicClient<Transport, Chain>[],
->(
+export function createERC20MultichainClient<const TClients extends readonly { chain: Chain }[]>(
     clients: TClients,
     options?: ERC20MultichainClientOptions,
 ): IERC20MultichainClient<TClients[number]["chain"]["id"]>;
