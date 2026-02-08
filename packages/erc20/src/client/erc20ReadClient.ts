@@ -1,5 +1,5 @@
 import type { ContractClient, MulticallItemResult } from "@0xtan0/chain-utils/core";
-import type { Address } from "viem";
+import type { Address, WalletClient } from "viem";
 import { CompositeErrorDecoder, createContractClient } from "@0xtan0/chain-utils/core";
 
 import type { ERC20Abi } from "../abi/erc20Abi.js";
@@ -27,7 +27,7 @@ export class ERC20ReadClient implements IERC20Read {
     readonly chainId: number;
     readonly supportsMulticall: boolean;
 
-    constructor(options: ERC20ClientOptions) {
+    constructor(options: ERC20ClientOptions & { walletClient?: WalletClient }) {
         const erc20Decoder = new ERC20ErrorDecoder(options.customErrorAbi);
         const errorDecoder = options.errorDecoder
             ? new CompositeErrorDecoder([erc20Decoder, options.errorDecoder])
@@ -36,6 +36,7 @@ export class ERC20ReadClient implements IERC20Read {
         this.contract = createContractClient({
             abi: erc20Abi,
             publicClient: options.client,
+            walletClient: options.walletClient,
             errorDecoder,
             multicallBatchSize: options.multicallBatchSize,
         });

@@ -48,6 +48,7 @@ export { ERC20ErrorDecoder } from "./decoder/erc20ErrorDecoder.js";
 
 // ---- Client Implementations ----
 export { ERC20ReadClient, createERC20Client } from "./client/erc20ReadClient.js";
+export { ERC20WriteClientImpl, createERC20WriteClient } from "./client/erc20WriteClient.js";
 
 // ---- Token ----
 export type { TokenDefinition } from "./token/tokenDefinition.js";
