@@ -57,18 +57,18 @@ describe("ERC20TokenBuilder", () => {
         it("adds a chain by numeric ID", () => {
             const client = createMultichain(1, 10);
             const token = new ERC20TokenBuilder(client)
-                .metadata({ symbol: "USDC" })
+                .metadata({ symbol: "USDC", name: "USD Coin", decimals: 6 })
                 .onChain(1 as const, USDC_MAINNET)
                 .build();
 
             expect(token.chainIds).toEqual([1]);
-            expect(token.address(1)).toBe(USDC_MAINNET);
+            expect(token.getAddress(1)).toBe(USDC_MAINNET);
         });
 
         it("adds multiple chains", () => {
             const client = createMultichain(1, 10);
             const token = new ERC20TokenBuilder(client)
-                .metadata({ symbol: "USDC" })
+                .metadata({ symbol: "USDC", name: "USD Coin", decimals: 6 })
                 .onChain(1 as const, USDC_MAINNET)
                 .onChain(10 as const, USDC_OPTIMISM)
                 .build();
@@ -82,11 +82,11 @@ describe("ERC20TokenBuilder", () => {
             const mainnet = mockChain(1);
             const client = createMultichain(1);
             const token = new ERC20TokenBuilder(client)
-                .metadata({ symbol: "USDC" })
+                .metadata({ symbol: "USDC", name: "USD Coin", decimals: 6 })
                 .onChain(mainnet, USDC_MAINNET)
                 .build();
 
-            expect(token.address(1 as never)).toBe(USDC_MAINNET);
+            expect(token.getAddress(1 as never)).toBe(USDC_MAINNET);
         });
 
         it("throws when adding a chain not in the MultichainClient", () => {
@@ -187,14 +187,38 @@ describe("ERC20TokenBuilder", () => {
     describe(".build()", () => {
         it("throws when no chains have been added", () => {
             const client = createMultichain(1);
-            const builder = new ERC20TokenBuilder(client).metadata({ symbol: "USDC" });
+            const builder = new ERC20TokenBuilder(client).metadata({
+                symbol: "USDC",
+                name: "USD Coin",
+                decimals: 6,
+            });
 
             expect(() => builder.build()).toThrow(ChainUtilsFault);
         });
 
         it("throws when no symbol is set", () => {
             const client = createMultichain(1);
-            const builder = new ERC20TokenBuilder(client).onChain(1 as const, USDC_MAINNET);
+            const builder = new ERC20TokenBuilder(client)
+                .metadata({ name: "USD Coin", decimals: 6 })
+                .onChain(1 as const, USDC_MAINNET);
+
+            expect(() => builder.build()).toThrow(ChainUtilsFault);
+        });
+
+        it("throws when no name is set", () => {
+            const client = createMultichain(1);
+            const builder = new ERC20TokenBuilder(client)
+                .metadata({ symbol: "USDC", decimals: 6 })
+                .onChain(1 as const, USDC_MAINNET);
+
+            expect(() => builder.build()).toThrow(ChainUtilsFault);
+        });
+
+        it("throws when no decimals is set", () => {
+            const client = createMultichain(1);
+            const builder = new ERC20TokenBuilder(client)
+                .metadata({ symbol: "USDC", name: "USD Coin" })
+                .onChain(1 as const, USDC_MAINNET);
 
             expect(() => builder.build()).toThrow(ChainUtilsFault);
         });
@@ -202,7 +226,7 @@ describe("ERC20TokenBuilder", () => {
         it("returns an ERC20Token", () => {
             const client = createMultichain(1);
             const token = new ERC20TokenBuilder(client)
-                .metadata({ symbol: "USDC" })
+                .metadata({ symbol: "USDC", name: "USD Coin", decimals: 6 })
                 .onChain(1 as const, USDC_MAINNET)
                 .build();
 
@@ -226,7 +250,7 @@ describe("ERC20TokenBuilder", () => {
         it("accumulates chain IDs through onChain calls", () => {
             const client = createMultichain(1, 10);
             const token = new ERC20TokenBuilder(client)
-                .metadata({ symbol: "USDC" })
+                .metadata({ symbol: "USDC", name: "USD Coin", decimals: 6 })
                 .onChain(1 as const, USDC_MAINNET)
                 .onChain(10 as const, USDC_OPTIMISM)
                 .build();
@@ -237,7 +261,7 @@ describe("ERC20TokenBuilder", () => {
         it("build returns ERC20Token with accumulated chain IDs", () => {
             const client = createMultichain(1, 10, 42161);
             const token = new ERC20TokenBuilder(client)
-                .metadata({ symbol: "USDC" })
+                .metadata({ symbol: "USDC", name: "USD Coin", decimals: 6 })
                 .onChain(1 as const, USDC_MAINNET)
                 .build();
 

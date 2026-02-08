@@ -6,7 +6,7 @@ import type { ERC20Token } from "../types/erc20Token.js";
 import type { ITokenDefinition } from "../types/tokenDefinition.js";
 import { ERC20BoundToken } from "./erc20Token.js";
 
-interface ERC20TokenMetadata {
+interface ERC20TokenMeta {
     readonly name?: string;
     readonly symbol?: string;
     readonly decimals?: number;
@@ -15,13 +15,8 @@ interface ERC20TokenMetadata {
 /**
  * Fluent builder that creates an ERC20Token bound to a MultichainClient.
  *
- * The builder constrains .onChain() to only accept chain IDs that
- * exist in the MultichainClient — you can't bind a token to a chain
- * you don't have an RPC connection for.
- *
  * TClientChainId — all chain IDs the MultichainClient supports.
  * TTokenChainId  — chain IDs accumulated so far via .onChain().
- *                  Always a subset of TClientChainId.
  */
 export class ERC20TokenBuilder<
     TClientChainId extends number,
@@ -29,19 +24,19 @@ export class ERC20TokenBuilder<
 > {
     readonly #client: MultichainClient<TClientChainId>;
     readonly #addresses: Map<number, Address>;
-    #meta: ERC20TokenMetadata;
+    #meta: ERC20TokenMeta;
 
     constructor(
         client: MultichainClient<TClientChainId>,
         addresses?: Map<number, Address>,
-        meta?: ERC20TokenMetadata,
+        meta?: ERC20TokenMeta,
     ) {
         this.#client = client;
         this.#addresses = addresses ?? new Map<number, Address>();
         this.#meta = meta ?? {};
     }
 
-    metadata(meta: ERC20TokenMetadata): this {
+    metadata(meta: ERC20TokenMeta): this {
         this.#meta = { ...this.#meta, ...meta };
         return this;
     }
@@ -84,7 +79,7 @@ export class ERC20TokenBuilder<
             }
         }
 
-        const meta: ERC20TokenMetadata = {
+        const meta: ERC20TokenMeta = {
             ...this.#meta,
             symbol: this.#meta.symbol ?? definition.symbol,
             name: this.#meta.name ?? definition.name,
@@ -116,7 +111,18 @@ export class ERC20TokenBuilder<
             );
         }
 
-        // Safe cast: builder only accepts chain IDs from the MultichainClient
+        if (this.#meta.name === undefined) {
+            throw new ChainUtilsFault(
+                "ERC20TokenBuilder requires a name — use .metadata({ name }) or .fromDefinition()",
+            );
+        }
+
+        if (this.#meta.decimals === undefined) {
+            throw new ChainUtilsFault(
+                "ERC20TokenBuilder requires decimals — use .metadata({ decimals }) or .fromDefinition()",
+            );
+        }
+
         const multichainClient = this.#client as unknown as MultichainClient<TTokenChainId>;
 
         return new ERC20BoundToken<TTokenChainId>({
