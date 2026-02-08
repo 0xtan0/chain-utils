@@ -16,6 +16,7 @@ export default defineConfig({
     resolve: {
         alias: {
             "@": path.resolve(__dirname, "src"),
+            "@0xtan0/chain-utils/core": path.resolve(__dirname, "../core/src/index.ts"),
         },
     },
 });

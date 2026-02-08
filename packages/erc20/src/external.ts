@@ -25,6 +25,20 @@ export type {
     ERC20MultichainClientOptions,
 } from "./types/options.js";
 
+// ---- Errors ----
+export { InvalidAddress, NotERC20Contract } from "./errors/contract.js";
+export {
+    InsufficientBalance,
+    InsufficientAllowance,
+    InvalidSender,
+    InvalidReceiver,
+    InvalidApprover,
+    InvalidSpender,
+} from "./errors/revert.js";
+
+// ---- Decoder ----
+export { ERC20ErrorDecoder } from "./decoder/erc20ErrorDecoder.js";
+
 // ---- Token ----
 export type { TokenDefinition } from "./token/tokenDefinition.js";
 export type { ERC20Token } from "./token/erc20Token.js";
