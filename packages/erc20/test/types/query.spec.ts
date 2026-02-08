@@ -3,6 +3,7 @@ import type {
     BalanceQuery,
     BatchAllowanceResult,
     BatchBalanceResult,
+    BatchFailure,
 } from "@/types/query.js";
 import type { MulticallItemResult } from "@0xtan0/chain-utils/core";
 import type { Address } from "viem";
@@ -33,10 +34,12 @@ describe("Query data types", () => {
             chainId: 1,
             results: [{ status: "success", result: 1000n }],
             queries: [{ token: address, holder: address }],
+            failures: [],
         };
         expectTypeOf(result.chainId).toEqualTypeOf<number>();
         expectTypeOf(result.results).toEqualTypeOf<ReadonlyArray<MulticallItemResult<bigint>>>();
         expectTypeOf(result.queries).toEqualTypeOf<ReadonlyArray<BalanceQuery>>();
+        expectTypeOf(result.failures).toEqualTypeOf<ReadonlyArray<BatchFailure<BalanceQuery>>>();
     });
 
     it("BatchAllowanceResult references MulticallItemResult<bigint>", () => {
@@ -44,9 +47,11 @@ describe("Query data types", () => {
             chainId: 1,
             results: [{ status: "success", result: 500n }],
             queries: [{ token: address, owner: address, spender: address }],
+            failures: [],
         };
         expectTypeOf(result.chainId).toEqualTypeOf<number>();
         expectTypeOf(result.results).toEqualTypeOf<ReadonlyArray<MulticallItemResult<bigint>>>();
         expectTypeOf(result.queries).toEqualTypeOf<ReadonlyArray<AllowanceQuery>>();
+        expectTypeOf(result.failures).toEqualTypeOf<ReadonlyArray<BatchFailure<AllowanceQuery>>>();
     });
 });

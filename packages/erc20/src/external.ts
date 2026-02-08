@@ -5,18 +5,25 @@ export { erc20ErrorsAbi } from "./abi/erc20ErrorsAbi.js";
 export type { ERC20ErrorsAbi } from "./abi/erc20ErrorsAbi.js";
 
 // ---- Token Data Types ----
-export type { TokenReference, TokenMetadata, TokenBalance, TokenAllowance } from "./types/token.js";
+export type {
+    TokenReference,
+    TokenMetadata,
+    TokenMetadataResult,
+    TokenBalance,
+    TokenAllowance,
+} from "./types/token.js";
 
 // ---- Query Types ----
 export type {
     BalanceQuery,
     AllowanceQuery,
+    BatchFailure,
     BatchBalanceResult,
     BatchAllowanceResult,
 } from "./types/query.js";
 
 // ---- Client Interfaces ----
-export type { ERC20ReadClient, ERC20WriteClient, ERC20MultichainClient } from "./types/client.js";
+export type { IERC20Read, ERC20WriteClient, ERC20MultichainClient } from "./types/client.js";
 
 // ---- Options ----
 export type {
@@ -38,6 +45,9 @@ export {
 
 // ---- Decoder ----
 export { ERC20ErrorDecoder } from "./decoder/erc20ErrorDecoder.js";
+
+// ---- Client Implementations ----
+export { ERC20ReadClient, createERC20Client } from "./client/erc20ReadClient.js";
 
 // ---- Token ----
 export type { TokenDefinition } from "./token/tokenDefinition.js";

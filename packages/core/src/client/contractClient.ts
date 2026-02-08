@@ -2,6 +2,9 @@ import type {
     Abi,
     Address,
     Chain,
+    ContractFunctionArgs,
+    ContractFunctionName,
+    ContractFunctionReturnType,
     Hash,
     Hex,
     PublicClient,
@@ -25,7 +28,7 @@ export interface ContractClientOptions<TAbi extends Abi> {
 }
 
 export class ContractClient<TAbi extends Abi> {
-    readonly abi: Abi;
+    readonly abi: TAbi;
     readonly chainId: number;
     readonly publicClient: PublicClient<Transport, Chain>;
     readonly walletClient?: WalletClient;
@@ -44,17 +47,17 @@ export class ContractClient<TAbi extends Abi> {
         this.supportsMulticall = options.publicClient.chain.contracts?.multicall3 !== undefined;
     }
 
-    async read(
+    async read<TFunctionName extends ContractFunctionName<TAbi, "pure" | "view">>(
         address: Address,
-        functionName: string,
-        args?: ReadonlyArray<unknown>,
-    ): Promise<unknown> {
+        functionName: TFunctionName,
+        args?: ContractFunctionArgs<TAbi, "pure" | "view", TFunctionName>,
+    ): Promise<ContractFunctionReturnType<TAbi, "pure" | "view", TFunctionName>> {
         return this.publicClient.readContract({
-            abi: this.abi,
+            abi: this.abi as Abi,
             address,
             functionName,
-            args: args ? [...args] : [],
-        });
+            args: (args ?? []) as unknown[],
+        }) as Promise<ContractFunctionReturnType<TAbi, "pure" | "view", TFunctionName>>;
     }
 
     async readBatch(
@@ -78,7 +81,7 @@ export class ContractClient<TAbi extends Abi> {
         }>,
     ): Promise<BatchResult<unknown>> {
         const contracts = calls.map((call) => ({
-            abi: this.abi,
+            abi: this.abi as Abi,
             address: call.address,
             functionName: call.functionName,
             args: call.args ? [...call.args] : undefined,
@@ -109,7 +112,7 @@ export class ContractClient<TAbi extends Abi> {
 
         try {
             await this.publicClient.simulateContract({
-                abi: this.abi,
+                abi: this.abi as Abi,
                 address,
                 functionName,
                 args: resolvedArgs,
@@ -120,7 +123,7 @@ export class ContractClient<TAbi extends Abi> {
         }
 
         const data = encodeFunctionData({
-            abi: this.abi,
+            abi: this.abi as Abi,
             functionName,
             args: resolvedArgs,
         });
@@ -215,7 +218,7 @@ export class ContractClient<TAbi extends Abi> {
         const settled = await Promise.allSettled(
             calls.map((call) =>
                 this.publicClient.readContract({
-                    abi: this.abi,
+                    abi: this.abi as Abi,
                     address: call.address,
                     functionName: call.functionName,
                     args: call.args ? [...call.args] : undefined,

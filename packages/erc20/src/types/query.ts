@@ -14,11 +14,18 @@ export interface AllowanceQuery {
     readonly spender: Address;
 }
 
+/** A failed query paired with its error. */
+export interface BatchFailure<TQuery> {
+    readonly query: TQuery;
+    readonly error: Error;
+}
+
 /** Typed batch balance result. */
 export interface BatchBalanceResult {
     readonly chainId: number;
     readonly results: ReadonlyArray<MulticallItemResult<bigint>>;
     readonly queries: ReadonlyArray<BalanceQuery>;
+    readonly failures: ReadonlyArray<BatchFailure<BalanceQuery>>;
 }
 
 /** Typed batch allowance result. */
@@ -26,4 +33,5 @@ export interface BatchAllowanceResult {
     readonly chainId: number;
     readonly results: ReadonlyArray<MulticallItemResult<bigint>>;
     readonly queries: ReadonlyArray<AllowanceQuery>;
+    readonly failures: ReadonlyArray<BatchFailure<AllowanceQuery>>;
 }
