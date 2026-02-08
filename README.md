@@ -1,146 +1,169 @@
-# ts-turborepo-boilerplate
+# @0xtan0/chain-utils
 
-## Features
+Type-safe ERC-20 utilities for [viem](https://viem.sh/). Define a token once, use it across every chain.
 
-### Boilerplate monorepo setup
+## Packages
 
-Quickly start developing your offchain monorepo project with
-minimal configuration overhead using Turborepo
+| Package                     | Description                                                      |
+| --------------------------- | ---------------------------------------------------------------- |
+| `@0xtan0/chain-utils/core`  | Shared multichain client primitives                              |
+| `@0xtan0/chain-utils/erc20` | ERC-20 read/write clients, token definitions, multichain queries |
 
-### Sample library with Viem
+## Install
 
-Simple provider that uses Viem client to query account balances
+```bash
+pnpm add @0xtan0/chain-utils/erc20 viem
+```
 
-### Sample contracts with Foundry
+## Quick Start
 
-Basic Greeter contract with an external interface
+### Define a token
 
-Foundry configuration out-of-the-box
+A `TokenDefinition` is pure data — no RPC, no side effects. Define it once in a shared module and import it everywhere.
 
-### Sample app that consumes the library
+```ts
+import { defineToken } from "@0xtan0/chain-utils/erc20";
+import { arbitrum, mainnet, optimism } from "viem/chains";
 
-How much ETH do Vitalik and the Zero address hold together?
+const WETH = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
+    .onChain(mainnet, "0xC02a...6Cc2")
+    .onChain(optimism, "0x4200...0006")
+    .onChain(arbitrum, "0x82aF...5C02")
+    .build();
+```
 
-### Testing
+Common tokens like `USDC` and `USDT` are included out of the box:
 
-Unit test setup with Vitest framework
+```ts
+import { USDC, USDT } from "@0xtan0/chain-utils/erc20";
+```
 
-### Lint and format
+### Single-chain reads
 
-Use ESLint and Prettier to easily find issues as you code
+Create a read client for one chain and query balances, allowances, and metadata.
 
-### Secret Lint
+```ts
+import { createERC20Client } from "@0xtan0/chain-utils/erc20";
+import { createPublicClient, http } from "viem";
+import { mainnet } from "viem/chains";
 
-Use Secretlint to avoid pushing secrets and credentials.
-By default, it uses `@secretlint/secretlint-rule-preset-recommend`, which searches for typical AWS, GCP, and other credentials in staged files before a commit.
+const rpc = createPublicClient({ chain: mainnet, transport: http() });
+const client = createERC20Client({ client: rpc });
 
-You can add custom regex patterns and allow specific values by editing `.secretlintrc.json`:
+const tokenAddress = WETH.address(mainnet.id);
 
-```json
-{
-    "rules": [
-        {
-            "id": "@secretlint/secretlint-rule-preset-recommend",
-            "rules": [
-                {
-                    "id": "@secretlint/secretlint-rule-npm",
-                    "options": {
-                        "allows": ["TOKEN"]
-                    }
-                }
-            ]
-        },
-        {
-            "id": "@secretlint/secretlint-rule-pattern",
-            "options": {
-                "patterns": [
-                    {
-                        "name": "password",
-                        "pattern": "/password\\s*=\\s*(?<password>[\\w\\d!@#$%^&(){}\\[\\]:\";'<>,.?/~`_+-=|]{1,256})\\b.*/"
-                    }
-                ]
-            }
-        }
-    ]
+const metadata = await client.getTokenMetadata(tokenAddress);
+const supply = await client.getTotalSupply(tokenAddress);
+const balance = await client.getBalance(tokenAddress, alice);
+const allowance = await client.getAllowance(tokenAddress, owner, spender);
+```
+
+### Multichain reads
+
+One client, multiple chains. All RPC calls fire in parallel.
+
+```ts
+import { createERC20MultichainClient } from "@0xtan0/chain-utils/erc20";
+
+const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
+
+// Single holder, all chains at once
+const balances = await multichain.getTokenBalance(WETH, alice);
+
+for (const [chainId, balance] of balances.resultsByChain) {
+    console.log(`Chain ${chainId}: ${balance.balance}`);
 }
 ```
 
-### Github workflows CI
+### Bound tokens
 
-Lint code and check commit messages format on every push.
+Attach RPC connections to a token definition for zero-config reads.
 
-Run all tests and see the coverage before merging changes.
+```ts
+const weth = multichain.forToken(WETH);
 
-## Overview
+console.log(weth.symbol); // "WETH"
+console.log(weth.chainIds); // [1, 10, 42161]
 
-This repository is a monorepo consisting of 2 packages and 1 app:
+// Balance across all bound chains
+const balances = await weth.getBalance(alice);
 
--   [`@ts-turborepo-boilerplate/contracts`](./packages/contracts): A library for writing all required smart contracts
--   [`@ts-turborepo-boilerplate/sample-lib`](./packages/sample-lib): A sample library for querying account balances
--   [`@ts-turborepo-boilerplate/sample-app`](./apps/sample-app): A demo sample app that uses the sample-lib
-
-## 📋 Prerequisites
-
--   Ensure you have `node 20` and `pnpm 9.7.1` installed.
-
-## Tech stack
-
--   [pnpm](https://pnpm.io/): package and workspace manager
--   [turborepo](https://turbo.build/repo/docs): for managing the monorepo and the build system
--   [foundry](https://book.getfoundry.sh/forge/): for writing Solidity smart contracts
--   [husky](https://typicode.github.io/husky/): tool for managing git hooks
--   tsc: for transpiling TS and building source code
--   [prettier](https://prettier.io/): code formatter
--   [eslint](https://typescript-eslint.io/): code linter
--   [vitest](https://vitest.dev/): modern testing framework
--   [Viem](https://viem.sh/): lightweight library to interface with EVM based blockchains
-
-### Configuring Prettier sort import plugin
-
-You can further add sorting rules for your monorepo, for example in `.prettierrc` you can add:
-
-```json
-    ...
-    "importOrder": [
-        "<TYPES>",
-        ...
-        "",
-        "<TYPES>^@myproject", //added
-        "^@myproject/(.*)$", //added
-        "",
-        ...
-    ],
-    ...
+// Multiple holders at once
+const all = await weth.getBalances([alice, bob]);
 ```
 
-We use [IanVs prettier-plugin-sort-imports](https://github.com/IanVS/prettier-plugin-sort-imports)
+### Transfers (convenience)
 
-## Available Scripts
+One call handles the full lifecycle: simulate, estimate gas, sign, broadcast, and wait.
 
-### `create-package`
+```ts
+import { createERC20WriteClient } from "@0xtan0/chain-utils/erc20";
+import { createWalletClient, http } from "viem";
 
-The `create-package` script allows you to create a new package within the `packages` directory. It automates the setup of a new package with the necessary directory structure and initial files scaffolded.
+const wallet = createWalletClient({
+    chain: mainnet,
+    transport: http(),
+    account,
+});
 
-#### Usage
+const writer = createERC20WriteClient({
+    client: rpc,
+    walletClient: wallet,
+});
 
-To create a new package, run the following command:
+const receipt = await writer.transfer(tokenAddress, bob, amount, {
+    waitForReceipt: true,
+});
+```
+
+### Approve + TransferFrom
+
+```ts
+// Alice approves Bob
+await aliceWriter.approve(tokenAddress, bob, amount, {
+    waitForReceipt: true,
+});
+
+// Check allowance
+const { allowance } = await client.getAllowance(tokenAddress, alice, bob);
+
+// Bob spends the allowance
+await bobWriter.transferFrom(tokenAddress, alice, bob, amount, {
+    waitForReceipt: true,
+});
+```
+
+### Granular transaction control
+
+For full control, use the prepare / sign / send / wait pipeline.
+
+```ts
+// 1. Prepare — simulate + estimate gas
+const prepared = await writer.prepareTransferFrom(tokenAddress, from, to, amount);
+
+// 2. Sign — produce signed bytes (no broadcast)
+const signed = await writer.signTransaction(prepared);
+
+// 3. Send — broadcast the raw transaction
+const hash = await writer.sendTransaction(signed);
+
+// 4. Wait — poll until mined
+const receipt = await writer.waitForReceipt(hash);
+```
+
+## Prerequisites
+
+-   Node 22
+-   pnpm 10+
+
+## Development
 
 ```bash
-pnpm run create-package <package-name>
+pnpm install
+pnpm build
+pnpm test
 ```
-
-Replace `<package-name>` with your desired package name. This command will generate the package directory with predefined templates and configuration files.
-
-## Contributing
-
-Wonderland is a team of top Web3 researchers, developers, and operators who believe that the future needs to be open-source, permissionless, and decentralized.
-
-[DeFi sucks](https://defi.sucks), but Wonderland is here to make it better.
-
-### 💻 Conventional Commits
-
-We follow the Conventional Commits [specification](https://www.conventionalcommits.org/en/v1.0.0/#specification).
 
 ## License
 
-The primary license for the boilerplate is MIT. See the [`LICENSE`](./LICENSE) file for details.
+MIT — see [`LICENSE`](./LICENSE).
