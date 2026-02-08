@@ -3,7 +3,7 @@ import type { Hex } from "viem";
 import { ChainUtilsFault } from "./base.js";
 
 export class ContractReverted extends ChainUtilsFault {
-    override readonly name = "ContractReverted";
+    override readonly name: string = "ContractReverted";
     readonly rawData?: Hex;
     readonly decodedMessage?: string;
 
