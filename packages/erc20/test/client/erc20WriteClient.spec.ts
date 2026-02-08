@@ -40,6 +40,11 @@ function mockPublicClient(
         multicall: vi.fn(),
         simulateContract: vi.fn().mockResolvedValue({ request: {} }),
         estimateGas: vi.fn().mockResolvedValue(50000n),
+        estimateFeesPerGas: vi.fn().mockResolvedValue({
+            maxFeePerGas: 1000000000n,
+            maxPriorityFeePerGas: 100000000n,
+        }),
+        getTransactionCount: vi.fn().mockResolvedValue(0),
         sendRawTransaction: vi.fn().mockResolvedValue(TX_HASH),
         waitForTransactionReceipt: vi.fn().mockResolvedValue({
             status: "success",

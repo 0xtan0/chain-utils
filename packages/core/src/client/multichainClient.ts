@@ -55,9 +55,9 @@ export class MultichainClient<TChainId extends number> {
 }
 
 /** Create from pre-built PublicClients (most common). */
-export function createMultichainClient<
-    const TClients extends readonly PublicClient<Transport, Chain>[],
->(clients: TClients): MultichainClient<TClients[number]["chain"]["id"]>;
+export function createMultichainClient<const TClients extends readonly { chain: Chain }[]>(
+    clients: TClients,
+): MultichainClient<TClients[number]["chain"]["id"]>;
 
 /** Create from ChainTransportConfig array (library creates PublicClients internally). */
 export function createMultichainClient<const TConfigs extends readonly ChainTransportConfig[]>(

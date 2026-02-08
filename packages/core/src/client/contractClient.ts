@@ -128,14 +128,28 @@ export class ContractClient<TAbi extends Abi> {
             args: resolvedArgs,
         });
 
-        const gasEstimate = await this.publicClient.estimateGas({
-            to: address,
-            data,
-            account: this.walletClient?.account,
-        });
+        const account = this.walletClient?.account;
+        const [gasEstimate, fees, nonce] = await Promise.all([
+            this.publicClient.estimateGas({
+                to: address,
+                data,
+                account,
+            }),
+            this.publicClient.estimateFeesPerGas(),
+            account
+                ? this.publicClient.getTransactionCount({ address: account.address })
+                : Promise.resolve(undefined),
+        ]);
 
         return {
-            request: { to: address, data, gas: gasEstimate },
+            request: {
+                to: address,
+                data,
+                gas: gasEstimate,
+                nonce,
+                maxFeePerGas: fees.maxFeePerGas,
+                maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
+            },
             gasEstimate,
             chainId: this.chainId,
         };
