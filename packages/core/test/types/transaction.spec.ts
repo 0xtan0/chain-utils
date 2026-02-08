@@ -2,7 +2,7 @@ import type { PreparedTransaction, SignedTransaction, WriteOptions } from "@/typ
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 describe("PreparedTransaction", () => {
-    it("should have required fields", () => {
+    it("has required fields", () => {
         const prepared: PreparedTransaction = {
             request: {},
             gasEstimate: 21000n,
@@ -16,7 +16,7 @@ describe("PreparedTransaction", () => {
 });
 
 describe("SignedTransaction", () => {
-    it("should have required fields", () => {
+    it("has required fields", () => {
         const signed: SignedTransaction = {
             serialized: "0xabcdef",
             chainId: 1,
@@ -28,12 +28,12 @@ describe("SignedTransaction", () => {
 });
 
 describe("WriteOptions", () => {
-    it("should accept empty options", () => {
+    it("accepts empty options", () => {
         const options: WriteOptions = {};
         expectTypeOf(options).toMatchTypeOf<WriteOptions>();
     });
 
-    it("should accept waitForReceipt", () => {
+    it("accepts waitForReceipt", () => {
         const options: WriteOptions = { waitForReceipt: true };
         expect(options.waitForReceipt).toBe(true);
     });
