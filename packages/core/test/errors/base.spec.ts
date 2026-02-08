@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 describe("ChainUtilsFault", () => {
     describe("construction", () => {
-        it("should create with just a shortMessage", () => {
+        it("creates with just a shortMessage", () => {
             const error = new ChainUtilsFault("Something went wrong");
 
             expect(error.shortMessage).toBe("Something went wrong");
@@ -14,7 +14,7 @@ describe("ChainUtilsFault", () => {
             expect(error).toBeInstanceOf(ChainUtilsFault);
         });
 
-        it("should create with details", () => {
+        it("creates with details", () => {
             const error = new ChainUtilsFault("Failed", {
                 details: "RPC returned 500",
             });
@@ -23,7 +23,7 @@ describe("ChainUtilsFault", () => {
             expect(error.message).toContain("Details: RPC returned 500");
         });
 
-        it("should create with metaMessages", () => {
+        it("creates with metaMessages", () => {
             const error = new ChainUtilsFault("Failed", {
                 metaMessages: ["Chain: mainnet", "Block: 12345"],
             });
@@ -33,14 +33,14 @@ describe("ChainUtilsFault", () => {
             expect(error.message).toContain("Block: 12345");
         });
 
-        it("should create with cause", () => {
+        it("creates with cause", () => {
             const cause = new Error("original error");
             const error = new ChainUtilsFault("Wrapped", { cause });
 
             expect(error.cause).toBe(cause);
         });
 
-        it("should format message with all options", () => {
+        it("formats message with all options", () => {
             const error = new ChainUtilsFault("Operation failed", {
                 details: "timeout",
                 metaMessages: ["Chain ID: 1"],
@@ -51,13 +51,13 @@ describe("ChainUtilsFault", () => {
     });
 
     describe("walk() without predicate", () => {
-        it("should return self when there is no cause", () => {
+        it("returns self when there is no cause", () => {
             const error = new ChainUtilsFault("no cause");
 
             expect(error.walk()).toBe(error);
         });
 
-        it("should return deepest cause", () => {
+        it("returns deepest cause", () => {
             const deepest = new Error("root cause");
             const middle = new ChainUtilsFault("middle", { cause: deepest });
             const top = new ChainUtilsFault("top", { cause: middle });
@@ -65,7 +65,7 @@ describe("ChainUtilsFault", () => {
             expect(top.walk()).toBe(deepest);
         });
 
-        it("should handle single level cause", () => {
+        it("handles single level cause", () => {
             const cause = new Error("cause");
             const error = new ChainUtilsFault("top", { cause });
 
@@ -74,7 +74,7 @@ describe("ChainUtilsFault", () => {
     });
 
     describe("walk() with predicate", () => {
-        it("should return first matching error", () => {
+        it("returns first matching error", () => {
             const deepest = new Error("root");
             const middle = new ChainUtilsFault("middle", { cause: deepest });
             const top = new ChainUtilsFault("top", { cause: middle });
@@ -86,7 +86,7 @@ describe("ChainUtilsFault", () => {
             expect(result).toBe(middle);
         });
 
-        it("should return null when no error matches", () => {
+        it("returns null when no error matches", () => {
             const error = new ChainUtilsFault("test");
 
             const result = error.walk(() => false);
@@ -94,7 +94,7 @@ describe("ChainUtilsFault", () => {
             expect(result).toBeNull();
         });
 
-        it("should return self when self matches", () => {
+        it("returns self when self matches", () => {
             const error = new ChainUtilsFault("test");
 
             const result = error.walk((err) => err instanceof ChainUtilsFault);
@@ -102,7 +102,7 @@ describe("ChainUtilsFault", () => {
             expect(result).toBe(error);
         });
 
-        it("should match on nested non-ChainUtilsFault errors", () => {
+        it("matches on nested non-ChainUtilsFault errors", () => {
             const typeError = new TypeError("bad type");
             const error = new ChainUtilsFault("wrapped", { cause: typeError });
 

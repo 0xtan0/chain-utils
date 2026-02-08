@@ -3,7 +3,7 @@ import { ContractReverted } from "@/errors/revert.js";
 import { describe, expect, it } from "vitest";
 
 describe("ContractReverted", () => {
-    it("should create with no options", () => {
+    it("creates with no options", () => {
         const error = new ContractReverted();
 
         expect(error.name).toBe("ContractReverted");
@@ -12,7 +12,7 @@ describe("ContractReverted", () => {
         expect(error.decodedMessage).toBeUndefined();
     });
 
-    it("should create with rawData only", () => {
+    it("creates with rawData only", () => {
         const error = new ContractReverted({
             rawData: "0xdeadbeef",
         });
@@ -23,7 +23,7 @@ describe("ContractReverted", () => {
         expect(error.message).toContain("Raw data: 0xdeadbeef");
     });
 
-    it("should create with decodedMessage only", () => {
+    it("creates with decodedMessage only", () => {
         const error = new ContractReverted({
             decodedMessage: "ERC20: transfer amount exceeds balance",
         });
@@ -34,7 +34,7 @@ describe("ContractReverted", () => {
         expect(error.message).toContain("Decoded message: ERC20: transfer amount exceeds balance");
     });
 
-    it("should create with both rawData and decodedMessage", () => {
+    it("creates with both rawData and decodedMessage", () => {
         const error = new ContractReverted({
             rawData: "0x08c379a0",
             decodedMessage: "Insufficient balance",
@@ -47,14 +47,14 @@ describe("ContractReverted", () => {
         expect(error.message).toContain("Decoded message: Insufficient balance");
     });
 
-    it("should create with cause", () => {
+    it("creates with cause", () => {
         const cause = new Error("rpc error");
         const error = new ContractReverted({ cause });
 
         expect(error.cause).toBe(cause);
     });
 
-    it("should create with all options", () => {
+    it("creates with all options", () => {
         const cause = new Error("call reverted");
         const error = new ContractReverted({
             rawData: "0xabcdef",
@@ -68,14 +68,14 @@ describe("ContractReverted", () => {
         expect(error.shortMessage).toBe("Not enough tokens");
     });
 
-    it("should extend ChainUtilsFault", () => {
+    it("extends ChainUtilsFault", () => {
         const error = new ContractReverted();
 
         expect(error).toBeInstanceOf(ChainUtilsFault);
         expect(error).toBeInstanceOf(Error);
     });
 
-    it("should be walkable from a parent ChainUtilsFault", () => {
+    it("is walkable from a parent ChainUtilsFault", () => {
         const cause = new ContractReverted({ rawData: "0x01" });
         const parent = new ChainUtilsFault("wrapped", { cause });
 
