@@ -172,12 +172,12 @@ describe("ERC20BoundToken", () => {
 
             // Verify chain 1 was called with chain 1's token address
             expect(readContracts.get(1)).toHaveBeenCalled();
-            const call1 = readContracts.get(1)!.mock.calls[0]!;
+            const call1 = readContracts.get(1)!.mock.calls[0]! as [{ address: string }];
             expect(call1[0].address).toBe(TOKEN_MAINNET);
 
             // Verify chain 10 was called with chain 10's token address
             expect(readContracts.get(10)).toHaveBeenCalled();
-            const call10 = readContracts.get(10)!.mock.calls[0]!;
+            const call10 = readContracts.get(10)!.mock.calls[0]! as [{ address: string }];
             expect(call10[0].address).toBe(TOKEN_OPTIMISM);
         });
 
