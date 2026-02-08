@@ -21,3 +21,5 @@ export { CompositeErrorDecoder } from "./decoder/compositeDecoder.js";
 export { MultichainClient, createMultichainClient } from "./client/multichainClient.js";
 export { ContractClient, createContractClient } from "./client/contractClient.js";
 export type { ContractClientOptions } from "./client/contractClient.js";
+export { MultichainContract, createMultichainContract } from "./client/multichainContract.js";
+export type { MultichainContractOptions } from "./client/multichainContract.js";
