@@ -51,5 +51,7 @@ export { ERC20ReadClient, createERC20Client } from "./client/erc20ReadClient.js"
 export { ERC20WriteClientImpl, createERC20WriteClient } from "./client/erc20WriteClient.js";
 
 // ---- Token ----
-export type { TokenDefinition } from "./token/tokenDefinition.js";
-export type { ERC20Token } from "./token/erc20Token.js";
+export type { ITokenDefinition } from "./types/tokenDefinition.js";
+export type { ITokenBuilder, TokenBuilderOptions } from "./token/tokenBuilder.js";
+export { TokenDefinition, TokenBuilder, defineToken } from "./token/tokenBuilder.js";
+export type { ERC20Token } from "./types/erc20Token.js";

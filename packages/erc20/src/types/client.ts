@@ -9,8 +9,7 @@ import type {
 import type { Address, Hash, TransactionReceipt } from "viem";
 
 import type { ERC20Abi } from "../abi/erc20Abi.js";
-import type { ERC20Token } from "../token/erc20Token.js";
-import type { TokenDefinition } from "../token/tokenDefinition.js";
+import type { ERC20Token } from "./erc20Token.js";
 import type {
     AllowanceQuery,
     BalanceQuery,
@@ -18,6 +17,7 @@ import type {
     BatchBalanceResult,
 } from "./query.js";
 import type { TokenAllowance, TokenBalance, TokenMetadata, TokenMetadataResult } from "./token.js";
+import type { ITokenDefinition } from "./tokenDefinition.js";
 
 /**
  * Single-chain ERC20 read client.
@@ -149,13 +149,13 @@ export interface ERC20MultichainClient<TChainId extends number> {
     // ---- Cross-chain reads (token definition) ----
 
     getTokenBalance<TTokenChainId extends TChainId>(
-        token: TokenDefinition<TTokenChainId>,
+        token: ITokenDefinition<TTokenChainId>,
         holder: Address,
         chainIds?: ReadonlyArray<TTokenChainId>,
     ): Promise<CrossChainBatchResult<TokenBalance>>;
 
     getTokenAllowance<TTokenChainId extends TChainId>(
-        token: TokenDefinition<TTokenChainId>,
+        token: ITokenDefinition<TTokenChainId>,
         owner: Address,
         spender: Address,
         chainIds?: ReadonlyArray<TTokenChainId>,
@@ -164,6 +164,6 @@ export interface ERC20MultichainClient<TChainId extends number> {
     // ---- Bound token ----
 
     forToken<TTokenChainId extends TChainId>(
-        token: TokenDefinition<TTokenChainId>,
+        token: ITokenDefinition<TTokenChainId>,
     ): ERC20Token<TTokenChainId>;
 }
