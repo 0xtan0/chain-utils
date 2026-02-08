@@ -12,3 +12,7 @@ export { ChainUtilsFault } from "./errors/base.js";
 export { UnsupportedChain, RpcFailure, MulticallNotSupported } from "./errors/chain.js";
 export { MulticallPartialFailure, MulticallBatchFailure } from "./errors/multicall.js";
 export { ContractReverted } from "./errors/revert.js";
+
+// ---- Decoder ----
+export type { ErrorDecoder } from "./decoder/errorDecoder.js";
+export { CompositeErrorDecoder } from "./decoder/compositeDecoder.js";
