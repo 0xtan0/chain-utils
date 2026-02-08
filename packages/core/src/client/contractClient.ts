@@ -1,7 +1,20 @@
-import type { Abi, Address, Chain, PublicClient, Transport, WalletClient } from "viem";
+import type {
+    Abi,
+    Address,
+    Chain,
+    Hash,
+    Hex,
+    PublicClient,
+    TransactionReceipt,
+    Transport,
+    WalletClient,
+} from "viem";
+import { BaseError, encodeFunctionData, isHex } from "viem";
 
 import type { ErrorDecoder } from "../decoder/errorDecoder.js";
 import type { BatchResult, MulticallItemResult } from "../types/multicall.js";
+import type { PreparedTransaction, SignedTransaction, WriteOptions } from "../types/transaction.js";
+import { ChainUtilsFault } from "../errors/base.js";
 
 export interface ContractClientOptions<TAbi extends Abi> {
     readonly abi: TAbi;
@@ -85,6 +98,111 @@ export class ContractClient<TAbi extends Abi> {
         });
 
         return { chainId: this.chainId, results };
+    }
+
+    async prepare(
+        address: Address,
+        functionName: string,
+        args?: ReadonlyArray<unknown>,
+    ): Promise<PreparedTransaction> {
+        const resolvedArgs = args ? [...args] : [];
+
+        try {
+            await this.publicClient.simulateContract({
+                abi: this.abi,
+                address,
+                functionName,
+                args: resolvedArgs,
+                account: this.walletClient?.account,
+            });
+        } catch (error) {
+            this.throwDecodedRevert(error);
+        }
+
+        const data = encodeFunctionData({
+            abi: this.abi,
+            functionName,
+            args: resolvedArgs,
+        });
+
+        const gasEstimate = await this.publicClient.estimateGas({
+            to: address,
+            data,
+            account: this.walletClient?.account,
+        });
+
+        return {
+            request: { to: address, data, gas: gasEstimate },
+            gasEstimate,
+            chainId: this.chainId,
+        };
+    }
+
+    async sign(prepared: PreparedTransaction): Promise<SignedTransaction> {
+        const walletClient = this.requireWalletClient();
+        const { account } = walletClient;
+        if (!account) {
+            throw new ChainUtilsFault("WalletClient must have an account for signing");
+        }
+        const serialized = await walletClient.signTransaction({
+            ...prepared.request,
+            chain: this.publicClient.chain,
+            account,
+        });
+        return { serialized, chainId: prepared.chainId };
+    }
+
+    async send(signed: SignedTransaction): Promise<Hash> {
+        return this.publicClient.sendRawTransaction({
+            serializedTransaction: signed.serialized,
+        });
+    }
+
+    async waitForReceipt(hash: Hash): Promise<TransactionReceipt> {
+        return this.publicClient.waitForTransactionReceipt({ hash });
+    }
+
+    async execute(
+        address: Address,
+        functionName: string,
+        args?: ReadonlyArray<unknown>,
+        options?: WriteOptions,
+    ): Promise<Hash | TransactionReceipt> {
+        const prepared = await this.prepare(address, functionName, args);
+        const signed = await this.sign(prepared);
+        const hash = await this.send(signed);
+
+        if (options?.waitForReceipt) {
+            return this.waitForReceipt(hash);
+        }
+        return hash;
+    }
+
+    private requireWalletClient(): WalletClient {
+        if (!this.walletClient) {
+            throw new ChainUtilsFault("WalletClient is required for write operations");
+        }
+        return this.walletClient;
+    }
+
+    private throwDecodedRevert(error: unknown): never {
+        if (this.errorDecoder && error instanceof BaseError) {
+            const rawData = this.extractRevertData(error);
+            if (rawData) {
+                const decoded = this.errorDecoder.decode(rawData);
+                if (decoded) throw decoded;
+            }
+        }
+        throw error;
+    }
+
+    private extractRevertData(error: BaseError): Hex | undefined {
+        const inner = error.walk((e) => typeof e === "object" && e !== null && "data" in e);
+        if (inner && "data" in inner) {
+            const { data } = inner;
+            if (isHex(data)) return data;
+        }
+        return undefined;
     }
 
     private async readBatchSequential(
