@@ -1,7 +1,12 @@
 import type { ERC20Abi } from "@/abi/erc20Abi.js";
-import type { ERC20MultichainClient, ERC20ReadClient, ERC20WriteClient } from "@/types/client.js";
+import type { ERC20MultichainClient, ERC20WriteClient, IERC20Read } from "@/types/client.js";
 import type { BatchAllowanceResult, BatchBalanceResult } from "@/types/query.js";
-import type { TokenAllowance, TokenBalance, TokenMetadata } from "@/types/token.js";
+import type {
+    TokenAllowance,
+    TokenBalance,
+    TokenMetadata,
+    TokenMetadataResult,
+} from "@/types/token.js";
 import type {
     ContractClient,
     CrossChainBatchResult,
@@ -12,49 +17,47 @@ import type {
 import type { Hash, TransactionReceipt } from "viem";
 import { describe, expectTypeOf, it } from "vitest";
 
-describe("ERC20ReadClient interface", () => {
+describe("IERC20Read interface", () => {
     it("exposes contract, chainId, and supportsMulticall", () => {
-        expectTypeOf<ERC20ReadClient["contract"]>().toEqualTypeOf<ContractClient<ERC20Abi>>();
-        expectTypeOf<ERC20ReadClient["chainId"]>().toEqualTypeOf<number>();
-        expectTypeOf<ERC20ReadClient["supportsMulticall"]>().toEqualTypeOf<boolean>();
+        expectTypeOf<IERC20Read["contract"]>().toEqualTypeOf<ContractClient<ERC20Abi>>();
+        expectTypeOf<IERC20Read["chainId"]>().toEqualTypeOf<number>();
+        expectTypeOf<IERC20Read["supportsMulticall"]>().toEqualTypeOf<boolean>();
     });
 
     it("has single read methods returning domain types", () => {
-        expectTypeOf<ERC20ReadClient["getTokenMetadata"]>().toBeFunction();
-        expectTypeOf<ERC20ReadClient["getBalance"]>().toBeFunction();
-        expectTypeOf<ERC20ReadClient["getAllowance"]>().toBeFunction();
-        expectTypeOf<ERC20ReadClient["getTotalSupply"]>().toBeFunction();
+        expectTypeOf<IERC20Read["getTokenMetadata"]>().toBeFunction();
+        expectTypeOf<IERC20Read["getBalance"]>().toBeFunction();
+        expectTypeOf<IERC20Read["getAllowance"]>().toBeFunction();
+        expectTypeOf<IERC20Read["getTotalSupply"]>().toBeFunction();
 
-        type GetMetadataReturn = Awaited<ReturnType<ERC20ReadClient["getTokenMetadata"]>>;
+        type GetMetadataReturn = Awaited<ReturnType<IERC20Read["getTokenMetadata"]>>;
         expectTypeOf<GetMetadataReturn>().toEqualTypeOf<TokenMetadata>();
 
-        type GetBalanceReturn = Awaited<ReturnType<ERC20ReadClient["getBalance"]>>;
+        type GetBalanceReturn = Awaited<ReturnType<IERC20Read["getBalance"]>>;
         expectTypeOf<GetBalanceReturn>().toEqualTypeOf<TokenBalance>();
 
-        type GetAllowanceReturn = Awaited<ReturnType<ERC20ReadClient["getAllowance"]>>;
+        type GetAllowanceReturn = Awaited<ReturnType<IERC20Read["getAllowance"]>>;
         expectTypeOf<GetAllowanceReturn>().toEqualTypeOf<TokenAllowance>();
 
-        type GetTotalSupplyReturn = Awaited<ReturnType<ERC20ReadClient["getTotalSupply"]>>;
+        type GetTotalSupplyReturn = Awaited<ReturnType<IERC20Read["getTotalSupply"]>>;
         expectTypeOf<GetTotalSupplyReturn>().toEqualTypeOf<bigint>();
     });
 
     it("has batch read methods", () => {
-        type GetBalancesReturn = Awaited<ReturnType<ERC20ReadClient["getBalances"]>>;
+        type GetBalancesReturn = Awaited<ReturnType<IERC20Read["getBalances"]>>;
         expectTypeOf<GetBalancesReturn>().toEqualTypeOf<BatchBalanceResult>();
 
-        type GetAllowancesReturn = Awaited<ReturnType<ERC20ReadClient["getAllowances"]>>;
+        type GetAllowancesReturn = Awaited<ReturnType<IERC20Read["getAllowances"]>>;
         expectTypeOf<GetAllowancesReturn>().toEqualTypeOf<BatchAllowanceResult>();
 
-        type GetMetadataBatchReturn = Awaited<ReturnType<ERC20ReadClient["getTokenMetadataBatch"]>>;
-        expectTypeOf<GetMetadataBatchReturn>().toEqualTypeOf<
-            ReadonlyArray<TokenMetadata | Error>
-        >();
+        type GetMetadataBatchReturn = Awaited<ReturnType<IERC20Read["getTokenMetadataBatch"]>>;
+        expectTypeOf<GetMetadataBatchReturn>().toEqualTypeOf<ReadonlyArray<TokenMetadataResult>>();
     });
 });
 
 describe("ERC20WriteClient interface", () => {
-    it("extends ERC20ReadClient", () => {
-        expectTypeOf<ERC20WriteClient>().toMatchTypeOf<ERC20ReadClient>();
+    it("extends IERC20Read", () => {
+        expectTypeOf<ERC20WriteClient>().toMatchTypeOf<IERC20Read>();
     });
 
     it("has prepare methods returning PreparedTransaction", () => {

@@ -17,7 +17,7 @@ import type {
     BatchAllowanceResult,
     BatchBalanceResult,
 } from "./query.js";
-import type { TokenAllowance, TokenBalance, TokenMetadata } from "./token.js";
+import type { TokenAllowance, TokenBalance, TokenMetadata, TokenMetadataResult } from "./token.js";
 
 /**
  * Single-chain ERC20 read client.
@@ -25,7 +25,7 @@ import type { TokenAllowance, TokenBalance, TokenMetadata } from "./token.js";
  * Composes a ContractClient<ERC20Abi> and provides typed,
  * domain-specific read operations.
  */
-export interface ERC20ReadClient {
+export interface IERC20Read {
     /** The underlying generic contract client. */
     readonly contract: ContractClient<ERC20Abi>;
 
@@ -48,16 +48,16 @@ export interface ERC20ReadClient {
     getAllowances(queries: ReadonlyArray<AllowanceQuery>): Promise<BatchAllowanceResult>;
     getTokenMetadataBatch(
         tokens: ReadonlyArray<Address>,
-    ): Promise<ReadonlyArray<TokenMetadata | Error>>;
+    ): Promise<ReadonlyArray<TokenMetadataResult>>;
 }
 
 /**
  * Single-chain ERC20 write client.
  *
- * Extends ERC20ReadClient. Adds full transaction lifecycle
+ * Extends IERC20Read. Adds full transaction lifecycle
  * for approve, transfer, and transferFrom.
  */
-export interface ERC20WriteClient extends ERC20ReadClient {
+export interface ERC20WriteClient extends IERC20Read {
     // ---- Prepare (simulate + gas estimate, no signing) ----
 
     prepareApprove(token: Address, spender: Address, amount: bigint): Promise<PreparedTransaction>;
@@ -112,7 +112,7 @@ export interface ERC20WriteClient extends ERC20ReadClient {
  * Multi-chain ERC20 client.
  *
  * Composes a MultichainContract<ERC20Abi, TChainId>. Routes requests
- * to the correct single-chain ERC20ReadClient based on chain ID.
+ * to the correct single-chain IERC20Read based on chain ID.
  *
  * TChainId is a union of literal chain IDs captured at creation time,
  * providing compile-time safety.
@@ -125,7 +125,7 @@ export interface ERC20MultichainClient<TChainId extends number> {
     readonly chainIds: ReadonlyArray<TChainId>;
 
     /** Get the single-chain read client for a specific chain. */
-    getClient(chainId: TChainId): ERC20ReadClient;
+    getClient(chainId: TChainId): IERC20Read;
 
     /** Check whether a chain is configured. */
     hasChain(chainId: number): boolean;

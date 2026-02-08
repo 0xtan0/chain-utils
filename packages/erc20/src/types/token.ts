@@ -20,6 +20,15 @@ export interface TokenBalance {
     readonly balance: bigint;
 }
 
+/** Discriminated-union result for a single token in a metadata batch. */
+export type TokenMetadataResult =
+    | { readonly status: "success"; readonly data: TokenMetadata }
+    | {
+          readonly status: "failure";
+          readonly token: TokenReference;
+          readonly errors: ReadonlyArray<Error>;
+      };
+
 /** An allowance result tied to owner/spender. */
 export interface TokenAllowance {
     readonly token: TokenReference;
