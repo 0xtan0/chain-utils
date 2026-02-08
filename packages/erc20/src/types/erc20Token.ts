@@ -1,8 +1,8 @@
 import type { CrossChainBatchResult } from "@0xtan0/chain-utils/core";
 import type { Address } from "viem";
 
-import type { BatchAllowanceResult, BatchBalanceResult } from "../types/query.js";
-import type { TokenBalance } from "../types/token.js";
+import type { BatchAllowanceResult, BatchBalanceResult } from "./query.js";
+import type { TokenBalance } from "./token.js";
 
 /**
  * A token definition bound to a multichain client.
