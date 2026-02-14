@@ -44,3 +44,19 @@ export type {
     BatchTokenByIndexResult,
     BatchTokenOfOwnerByIndexResult,
 } from "./types/query.js";
+
+// ---- Error Decoder ----
+export { ERC721ErrorDecoder } from "./decoder/erc721ErrorDecoder.js";
+
+// ---- Errors ----
+export { InvalidAddress, NotERC721Contract, NotERC721Enumerable } from "./errors/contract.js";
+export {
+    IncorrectOwner,
+    InsufficientApproval,
+    InvalidApprover,
+    InvalidOperator,
+    InvalidOwner,
+    InvalidReceiver,
+    InvalidSender,
+    NonexistentToken,
+} from "./errors/revert.js";
