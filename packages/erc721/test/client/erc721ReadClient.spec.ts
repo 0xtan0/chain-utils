@@ -106,15 +106,17 @@ describe("ERC721ReadClient", () => {
         const cases = [
             {
                 name: "getTotalSupply",
-                run: (client: ERC721ReadClient) => client.getTotalSupply(COLLECTION),
+                run: (client: ERC721ReadClient): Promise<bigint> =>
+                    client.getTotalSupply(COLLECTION),
             },
             {
                 name: "getTokenByIndex",
-                run: (client: ERC721ReadClient) => client.getTokenByIndex(COLLECTION, 0n),
+                run: (client: ERC721ReadClient): Promise<bigint> =>
+                    client.getTokenByIndex(COLLECTION, 0n),
             },
             {
                 name: "getTokenOfOwnerByIndex",
-                run: (client: ERC721ReadClient) =>
+                run: (client: ERC721ReadClient): Promise<bigint> =>
                     client.getTokenOfOwnerByIndex(COLLECTION, OWNER, 0n),
             },
         ];
