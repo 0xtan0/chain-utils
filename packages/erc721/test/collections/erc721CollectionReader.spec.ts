@@ -1,7 +1,7 @@
 import type { IERC721Read } from "@/types/index.js";
 import type { Address, Chain, PublicClient, Transport } from "viem";
 import { ERC721ReadClient } from "@/client/erc721ReadClient.js";
-import { ERC721CollectionReader } from "@/collection/index.js";
+import { ERC721CollectionReader } from "@/collections/index.js";
 import { describe, expect, it, vi } from "vitest";
 
 const COLLECTION = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address;
