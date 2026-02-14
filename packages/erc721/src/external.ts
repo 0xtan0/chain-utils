@@ -43,6 +43,9 @@ export type {
     BatchTokenOfOwnerByIndexResult,
 } from "./types/index.js";
 
+// ---- Client Factories & Classes ----
+export { ERC721ReadClient, createERC721Client } from "./client/erc721ReadClient.js";
+
 // ---- Error Decoder ----
 export { ERC721ErrorDecoder } from "./decoder/index.js";
 
