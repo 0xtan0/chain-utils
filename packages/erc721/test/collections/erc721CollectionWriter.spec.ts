@@ -1,7 +1,7 @@
 import type { IERC721WriteClient } from "@/types/index.js";
 import type { Address, Chain, Hash, Hex, PublicClient, Transport, WalletClient } from "viem";
-import { ERC721CollectionWriter } from "@/client/erc721CollectionWriter.js";
 import { ERC721WriteClient } from "@/client/erc721WriteClient.js";
+import { ERC721CollectionWriter } from "@/collections/index.js";
 import { describe, expect, it, vi } from "vitest";
 
 const COLLECTION = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address;

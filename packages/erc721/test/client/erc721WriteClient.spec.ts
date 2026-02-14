@@ -1,8 +1,8 @@
 import type { ERC721WriteClientOptions } from "@/types/options.js";
 import type { Address, Chain, Hash, Hex, PublicClient, Transport, WalletClient } from "viem";
 import { erc721ErrorsAbi } from "@/abi/erc721ErrorsAbi.js";
-import { ERC721CollectionWriter } from "@/client/erc721CollectionWriter.js";
 import { createERC721WriteClient, ERC721WriteClient } from "@/client/erc721WriteClient.js";
+import { ERC721CollectionWriter } from "@/collections/index.js";
 import { InvalidAddress } from "@/errors/contract.js";
 import { NonexistentToken } from "@/errors/revert.js";
 import { BaseError, encodeErrorResult } from "viem";
