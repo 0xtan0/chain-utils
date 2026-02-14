@@ -2,18 +2,18 @@
 export { erc721Abi, erc721ErrorsAbi } from "./abi/index.js";
 export type { ERC721Abi, ERC721ErrorsAbi } from "./abi/index.js";
 
-// ---- Client Interfaces ----
-export type { IERC721Read, ERC721WriteClient, IERC721MultichainClient } from "./types/client.js";
-
-// ---- Options Types ----
 export type {
+    // Client Interfaces
+    IERC721Read,
+    ERC721WriteClient,
+    IERC721MultichainClient,
+
+    // Options Types
     ERC721ClientOptions,
     ERC721WriteClientOptions,
     ERC721MultichainClientOptions,
-} from "./types/options.js";
 
-// ---- Data Types ----
-export type {
+    // Data Types
     CollectionReference,
     CollectionMetadata,
     NFTReference,
@@ -22,8 +22,6 @@ export type {
     OperatorApproval,
     TokenURI,
     TokenURIResult,
-} from "./types/token.js";
-export type {
     OwnerQuery,
     TokenURIQuery,
     ApprovalQuery,
@@ -43,14 +41,19 @@ export type {
     BatchTotalSupplyResult,
     BatchTokenByIndexResult,
     BatchTokenOfOwnerByIndexResult,
-} from "./types/query.js";
+} from "./types/index.js";
 
 // ---- Error Decoder ----
-export { ERC721ErrorDecoder } from "./decoder/erc721ErrorDecoder.js";
+export { ERC721ErrorDecoder } from "./decoder/index.js";
 
 // ---- Errors ----
-export { InvalidAddress, NotERC721Contract, NotERC721Enumerable } from "./errors/contract.js";
 export {
+    // Contract Validation Errors
+    InvalidAddress,
+    NotERC721Contract,
+    NotERC721Enumerable,
+
+    // Revert Errors
     IncorrectOwner,
     InsufficientApproval,
     InvalidApprover,
@@ -59,4 +62,4 @@ export {
     InvalidReceiver,
     InvalidSender,
     NonexistentToken,
-} from "./errors/revert.js";
+} from "./errors/index.js";
