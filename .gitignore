@@ -59,3 +59,5 @@ lcov.info
 .designs/
 .claude/
 .cursor/
+
+.keys/
