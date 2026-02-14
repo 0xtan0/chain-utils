@@ -5,7 +5,7 @@ export type { ERC721Abi, ERC721ErrorsAbi } from "./abi/index.js";
 export type {
     // Client Interfaces
     IERC721Read,
-    ERC721WriteClient,
+    IERC721WriteClient,
     IERC721MultichainClient,
 
     // Options Types
@@ -45,6 +45,7 @@ export type {
 
 // ---- Client Factories & Classes ----
 export { ERC721ReadClient, createERC721Client } from "./client/erc721ReadClient.js";
+export { ERC721WriteClient, createERC721WriteClient } from "./client/erc721WriteClient.js";
 
 // ---- Error Decoder ----
 export { ERC721ErrorDecoder } from "./decoder/index.js";
