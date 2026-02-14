@@ -50,16 +50,18 @@ export type {
 } from "./types/index.js";
 
 // ---- Client Factories & Classes ----
-export { ERC721ReadClient, createERC721Client } from "./client/erc721ReadClient.js";
-export { ERC721WriteClient, createERC721WriteClient } from "./client/erc721WriteClient.js";
+export {
+    ERC721ReadClient,
+    createERC721Client,
+    ERC721WriteClient,
+    createERC721WriteClient,
+} from "./client/index.js";
 export {
     ERC721CollectionReader,
     createERC721CollectionReader,
-} from "./client/erc721CollectionReader.js";
-export {
     ERC721CollectionWriter,
     createERC721CollectionWriter,
-} from "./client/erc721CollectionWriter.js";
+} from "./collections/index.js";
 
 // ---- Error Decoder ----
 export { ERC721ErrorDecoder } from "./decoder/index.js";

@@ -35,10 +35,10 @@ import type {
     TotalSupplyQuery,
 } from "../types/index.js";
 import { erc721Abi } from "../abi/index.js";
+import { ERC721CollectionReader } from "../collections/erc721CollectionReader.js";
 import { ERC721ErrorDecoder } from "../decoder/index.js";
 import { NotERC721Enumerable } from "../errors/index.js";
 import { validateAddress } from "../helpers/index.js";
-import { ERC721CollectionReader } from "./erc721CollectionReader.js";
 
 const ERC721_ENUMERABLE_INTERFACE_ID = "0x780e9d63" as Hex;
 

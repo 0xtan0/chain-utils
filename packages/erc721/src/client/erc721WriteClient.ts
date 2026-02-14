@@ -7,8 +7,8 @@ import type { Address, Hash, Hex, TransactionReceipt } from "viem";
 
 import type { IERC721CollectionWriter, IERC721WriteClient } from "../types/client.js";
 import type { ERC721WriteClientOptions } from "../types/options.js";
+import { ERC721CollectionWriter } from "../collections/erc721CollectionWriter.js";
 import { validateAddress } from "../helpers/validateAddress.js";
-import { ERC721CollectionWriter } from "./erc721CollectionWriter.js";
 import { ERC721ReadClient } from "./erc721ReadClient.js";
 
 export class ERC721WriteClient extends ERC721ReadClient implements IERC721WriteClient {
