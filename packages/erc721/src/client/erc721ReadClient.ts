@@ -18,6 +18,7 @@ import type {
     BatchTotalSupplyResult,
     CollectionMetadata,
     ERC721ClientOptions,
+    IERC721CollectionReader,
     IERC721Read,
     InterfaceSupportQuery,
     NFTReference,
@@ -34,6 +35,7 @@ import type {
     TotalSupplyQuery,
 } from "../types/index.js";
 import { erc721Abi } from "../abi/index.js";
+import { ERC721CollectionReader } from "../collections/erc721CollectionReader.js";
 import { ERC721ErrorDecoder } from "../decoder/index.js";
 import { NotERC721Enumerable } from "../errors/index.js";
 import { validateAddress } from "../helpers/index.js";
@@ -348,6 +350,10 @@ export class ERC721ReadClient implements IERC721Read {
         );
 
         return { chainId: batch.chainId, results, queries, failures };
+    }
+
+    forCollection(collection: Address): IERC721CollectionReader {
+        return ERC721CollectionReader.fromClient(this, collection);
     }
 
     private createNftReference(collection: Address, tokenId: bigint): NFTReference {

@@ -1,10 +1,12 @@
 import type {
     ERC721ClientOptions,
+    ERC721CollectionReaderOptions,
+    ERC721CollectionWriterOptions,
     ERC721MultichainClientOptions,
     ERC721WriteClientOptions,
 } from "@/types/options.js";
 import type { ErrorDecoder } from "@0xtan0/chain-utils/core";
-import type { Abi, Chain, PublicClient, Transport, WalletClient } from "viem";
+import type { Abi, Address, Chain, PublicClient, Transport, WalletClient } from "viem";
 import { describe, expectTypeOf, it } from "vitest";
 
 describe("ERC721ClientOptions", () => {
@@ -29,6 +31,20 @@ describe("ERC721WriteClientOptions", () => {
 
     it("requires walletClient", () => {
         expectTypeOf<ERC721WriteClientOptions["walletClient"]>().toEqualTypeOf<WalletClient>();
+    });
+});
+
+describe("ERC721CollectionReaderOptions", () => {
+    it("extends ERC721ClientOptions with collection", () => {
+        expectTypeOf<ERC721CollectionReaderOptions>().toMatchTypeOf<ERC721ClientOptions>();
+        expectTypeOf<ERC721CollectionReaderOptions["collection"]>().toEqualTypeOf<Address>();
+    });
+});
+
+describe("ERC721CollectionWriterOptions", () => {
+    it("extends ERC721WriteClientOptions with collection", () => {
+        expectTypeOf<ERC721CollectionWriterOptions>().toMatchTypeOf<ERC721WriteClientOptions>();
+        expectTypeOf<ERC721CollectionWriterOptions["collection"]>().toEqualTypeOf<Address>();
     });
 });
 

@@ -2,6 +2,7 @@ import type { ERC721WriteClientOptions } from "@/types/options.js";
 import type { Address, Chain, Hash, Hex, PublicClient, Transport, WalletClient } from "viem";
 import { erc721ErrorsAbi } from "@/abi/erc721ErrorsAbi.js";
 import { createERC721WriteClient, ERC721WriteClient } from "@/client/erc721WriteClient.js";
+import { ERC721CollectionWriter } from "@/collections/index.js";
 import { InvalidAddress } from "@/errors/contract.js";
 import { NonexistentToken } from "@/errors/revert.js";
 import { BaseError, encodeErrorResult } from "viem";
@@ -103,6 +104,15 @@ describe("ERC721WriteClient", () => {
         it("createERC721WriteClient factory returns an ERC721WriteClient", () => {
             const client = createERC721WriteClient(createOptions());
             expect(client.chainId).toBe(1);
+        });
+
+        it("forCollection returns ERC721CollectionWriter", () => {
+            const client = new ERC721WriteClient(createOptions());
+            const collection = client.forCollection(COLLECTION);
+
+            expect(collection).toBeInstanceOf(ERC721CollectionWriter);
+            expect(collection.collection).toBe(COLLECTION);
+            expect(collection.chainId).toBe(client.chainId);
         });
     });
 

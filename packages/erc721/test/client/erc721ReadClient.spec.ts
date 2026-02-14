@@ -1,6 +1,11 @@
 import type { ERC721ClientOptions } from "@/index.js";
 import type { Address, Chain, PublicClient, Transport } from "viem";
-import { createERC721Client, ERC721ReadClient, NotERC721Enumerable } from "@/index.js";
+import {
+    createERC721Client,
+    ERC721CollectionReader,
+    ERC721ReadClient,
+    NotERC721Enumerable,
+} from "@/index.js";
 import { describe, expect, it, vi } from "vitest";
 
 const COLLECTION = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address;
@@ -58,6 +63,15 @@ describe("ERC721ReadClient", () => {
         it("createERC721Client factory returns an ERC721ReadClient", () => {
             const client = createERC721Client(createOptions());
             expect(client.chainId).toBe(1);
+        });
+
+        it("forCollection returns ERC721CollectionReader", () => {
+            const client = new ERC721ReadClient(createOptions());
+            const collection = client.forCollection(COLLECTION);
+
+            expect(collection).toBeInstanceOf(ERC721CollectionReader);
+            expect(collection.collection).toBe(COLLECTION);
+            expect(collection.chainId).toBe(client.chainId);
         });
     });
 
