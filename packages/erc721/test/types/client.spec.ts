@@ -1,5 +1,5 @@
 import type { ERC721Abi } from "@/abi/erc721Abi.js";
-import type { ERC721WriteClient, IERC721MultichainClient, IERC721Read } from "@/types/client.js";
+import type { IERC721MultichainClient, IERC721Read, IERC721WriteClient } from "@/types/client.js";
 import type {
     BatchApprovalResult,
     BatchBalanceResult,
@@ -109,51 +109,51 @@ describe("IERC721Read interface", () => {
     });
 });
 
-describe("ERC721WriteClient interface", () => {
+describe("IERC721WriteClient interface", () => {
     it("extends IERC721Read", () => {
-        expectTypeOf<ERC721WriteClient>().toMatchTypeOf<IERC721Read>();
+        expectTypeOf<IERC721WriteClient>().toMatchTypeOf<IERC721Read>();
     });
 
     it("has prepare methods returning PreparedTransaction", () => {
-        type PrepareApproveReturn = Awaited<ReturnType<ERC721WriteClient["prepareApprove"]>>;
+        type PrepareApproveReturn = Awaited<ReturnType<IERC721WriteClient["prepareApprove"]>>;
         expectTypeOf<PrepareApproveReturn>().toEqualTypeOf<PreparedTransaction>();
 
         type PrepareSetApprovalReturn = Awaited<
-            ReturnType<ERC721WriteClient["prepareSetApprovalForAll"]>
+            ReturnType<IERC721WriteClient["prepareSetApprovalForAll"]>
         >;
         expectTypeOf<PrepareSetApprovalReturn>().toEqualTypeOf<PreparedTransaction>();
 
-        type PrepareTransferReturn = Awaited<ReturnType<ERC721WriteClient["prepareTransferFrom"]>>;
+        type PrepareTransferReturn = Awaited<ReturnType<IERC721WriteClient["prepareTransferFrom"]>>;
         expectTypeOf<PrepareTransferReturn>().toEqualTypeOf<PreparedTransaction>();
 
         type PrepareSafeTransferReturn = Awaited<
-            ReturnType<ERC721WriteClient["prepareSafeTransferFrom"]>
+            ReturnType<IERC721WriteClient["prepareSafeTransferFrom"]>
         >;
         expectTypeOf<PrepareSafeTransferReturn>().toEqualTypeOf<PreparedTransaction>();
     });
 
     it("has sign/send/wait lifecycle methods", () => {
-        type SignReturn = Awaited<ReturnType<ERC721WriteClient["signTransaction"]>>;
+        type SignReturn = Awaited<ReturnType<IERC721WriteClient["signTransaction"]>>;
         expectTypeOf<SignReturn>().toEqualTypeOf<SignedTransaction>();
 
-        type SendReturn = Awaited<ReturnType<ERC721WriteClient["sendTransaction"]>>;
+        type SendReturn = Awaited<ReturnType<IERC721WriteClient["sendTransaction"]>>;
         expectTypeOf<SendReturn>().toEqualTypeOf<Hash>();
 
-        type WaitReturn = Awaited<ReturnType<ERC721WriteClient["waitForReceipt"]>>;
+        type WaitReturn = Awaited<ReturnType<IERC721WriteClient["waitForReceipt"]>>;
         expectTypeOf<WaitReturn>().toEqualTypeOf<TransactionReceipt>();
     });
 
     it("has convenience methods returning Hash | TransactionReceipt", () => {
-        type ApproveReturn = Awaited<ReturnType<ERC721WriteClient["approve"]>>;
+        type ApproveReturn = Awaited<ReturnType<IERC721WriteClient["approve"]>>;
         expectTypeOf<ApproveReturn>().toEqualTypeOf<Hash | TransactionReceipt>();
 
-        type SetApprovalReturn = Awaited<ReturnType<ERC721WriteClient["setApprovalForAll"]>>;
+        type SetApprovalReturn = Awaited<ReturnType<IERC721WriteClient["setApprovalForAll"]>>;
         expectTypeOf<SetApprovalReturn>().toEqualTypeOf<Hash | TransactionReceipt>();
 
-        type TransferReturn = Awaited<ReturnType<ERC721WriteClient["transferFrom"]>>;
+        type TransferReturn = Awaited<ReturnType<IERC721WriteClient["transferFrom"]>>;
         expectTypeOf<TransferReturn>().toEqualTypeOf<Hash | TransactionReceipt>();
 
-        type SafeTransferReturn = Awaited<ReturnType<ERC721WriteClient["safeTransferFrom"]>>;
+        type SafeTransferReturn = Awaited<ReturnType<IERC721WriteClient["safeTransferFrom"]>>;
         expectTypeOf<SafeTransferReturn>().toEqualTypeOf<Hash | TransactionReceipt>();
     });
 });

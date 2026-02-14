@@ -96,7 +96,7 @@ export interface IERC721Read {
  * Extends IERC721Read. Adds full transaction lifecycle
  * for approvals and transfers.
  */
-export interface ERC721WriteClient extends IERC721Read {
+export interface IERC721WriteClient extends IERC721Read {
     // ---- Prepare (simulate + gas estimate, no signing) ----
 
     prepareApprove(collection: Address, to: Address, tokenId: bigint): Promise<PreparedTransaction>;
