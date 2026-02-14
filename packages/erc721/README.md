@@ -1,13 +1,14 @@
 # @0xtan0/chain-utils/erc721
 
-Type-safe ERC-721 utilities for [viem](https://viem.sh/) that turn NFT reads/writes into small, predictable primitives.
+Type-safe ERC-721 utilities for [viem](https://viem.sh/).
 
-If your codebase currently spreads raw `readContract`/`writeContract` calls across services, this package gives you one typed client with:
+This package provides:
 
--   consistent NFT domain objects (collection, owner, token URI, approvals)
--   multicall batch reads with partial-failure reporting
--   one-shot write methods plus full prepare/sign/send control
--   decoded ERC-721 revert errors instead of opaque hex reverts
+-   read and write clients for single-chain ERC-721 interactions
+-   typed domain objects (collection metadata, owners, approvals, token URIs)
+-   batch reads with multicall-first behavior and per-item failure reporting
+-   transaction helpers (`prepare`, `sign`, `send`, `wait`) and one-shot write methods
+-   typed decoding for known ERC-721 custom errors
 
 Built on top of `@0xtan0/chain-utils/core`.
 
@@ -17,16 +18,15 @@ Built on top of `@0xtan0/chain-utils/core`.
 pnpm add @0xtan0/chain-utils/erc721 viem
 ```
 
-## What Problem It Solves
+## Scope and Behavior
 
-Production NFT apps usually hit the same issues:
+This package is focused on contract interaction primitives, not indexing or marketplace logic.
+It is intended for service/backend flows that need deterministic, typed RPC behavior.
 
--   duplicated ABI call logic in every service or route
--   brittle ad-hoc batching with unclear failure handling
--   weak typing between read models and write flows
--   hard-to-debug revert data when transfers/approvals fail
-
-`@0xtan0/chain-utils/erc721` centralizes those concerns so your app code focuses on product logic (who owns what, who can transfer, what to display) rather than low-level RPC wiring.
+-   Multicall is used when available on the chain; otherwise reads fall back to sequential calls.
+-   Batch methods preserve order and return partial failures in typed result structures.
+-   Enumerable reads are gated by ERC165 support checks.
+-   Write helpers enforce wallet-based signing flow through `WalletClient`.
 
 ## Example: Ownership + Metadata + Transfer
 
@@ -102,15 +102,51 @@ try {
 }
 ```
 
+## Collection-Bound Reader/Writer
+
+If you work with one collection repeatedly, bind it once and remove the `collection` arg from every call.
+
+```ts
+import {
+    createERC721Client,
+    createERC721CollectionReader,
+    createERC721CollectionWriter,
+    createERC721WriteClient,
+} from "@0xtan0/chain-utils/erc721";
+
+const reader = createERC721Client({ client: publicClient });
+const writer = createERC721WriteClient({ client: publicClient, walletClient });
+
+// Bind through existing clients
+const coolCatsRead = reader.forCollection(collection);
+const coolCatsWrite = writer.forCollection(collection);
+
+await coolCatsRead.getOwnerOf(42n);
+await coolCatsRead.getTokenURIs([1n, 2n, 3n]);
+await coolCatsWrite.transferFrom(from, to, 42n, { waitForReceipt: true });
+
+// Or construct bound objects directly
+const directRead = createERC721CollectionReader({ collection, client: publicClient });
+const directWrite = createERC721CollectionWriter({
+    collection,
+    client: publicClient,
+    walletClient,
+});
+```
+
 ## API Summary
 
-| Export                    | Description                                                       |
-| ------------------------- | ----------------------------------------------------------------- |
-| `createERC721Client`      | Single-chain read client (owner, balances, approvals, metadata)   |
-| `createERC721WriteClient` | Single-chain write client (approve, setApprovalForAll, transfers) |
-| `ERC721ReadClient`        | Class implementation behind the read factory                      |
-| `ERC721WriteClient`       | Class implementation behind the write factory                     |
-| `ERC721ErrorDecoder`      | Decodes ERC-721 custom errors and legacy string reverts           |
+| Export                         | Description                                                       |
+| ------------------------------ | ----------------------------------------------------------------- |
+| `createERC721Client`           | Single-chain read client (owner, balances, approvals, metadata)   |
+| `createERC721WriteClient`      | Single-chain write client (approve, setApprovalForAll, transfers) |
+| `ERC721CollectionReader`       | Bound single-chain collection reader                              |
+| `createERC721CollectionReader` | Factory for bound collection reader                               |
+| `ERC721CollectionWriter`       | Bound single-chain collection writer (extends reader)             |
+| `createERC721CollectionWriter` | Factory for bound collection writer                               |
+| `ERC721ReadClient`             | Class implementation behind the read factory                      |
+| `ERC721WriteClient`            | Class implementation behind the write factory                     |
+| `ERC721ErrorDecoder`           | Decodes ERC-721 custom errors and legacy string reverts           |
 
 ## Typed Errors
 

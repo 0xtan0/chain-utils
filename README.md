@@ -1,13 +1,14 @@
 # @0xtan0/chain-utils
 
-Type-safe ERC-20 utilities for [viem](https://viem.sh/). Define a token once, use it across every chain.
+Type-safe EVM utilities for [viem](https://viem.sh/) with focused packages for core primitives, ERC-20, and ERC-721.
 
 ## Packages
 
-| Package                     | Description                                                      |
-| --------------------------- | ---------------------------------------------------------------- |
-| `@0xtan0/chain-utils/core`  | Shared multichain client primitives                              |
-| `@0xtan0/chain-utils/erc20` | ERC-20 read/write clients, token definitions, multichain queries |
+| Package                      | Description                                                      |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `@0xtan0/chain-utils/core`   | Shared multichain client primitives                              |
+| `@0xtan0/chain-utils/erc20`  | ERC-20 read/write clients, token definitions, multichain queries |
+| `@0xtan0/chain-utils/erc721` | ERC-721 read/write clients with bound collection reader/writer   |
 
 ## Install
 
