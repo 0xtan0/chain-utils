@@ -59,5 +59,6 @@ lcov.info
 .designs/
 .claude/
 .cursor/
+.codex-skills/
 
 .keys/
