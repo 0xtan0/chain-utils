@@ -5,9 +5,10 @@ import type {
 } from "@0xtan0/chain-utils/core";
 import type { Address, Hash, Hex, TransactionReceipt } from "viem";
 
-import type { IERC721WriteClient } from "../types/client.js";
+import type { IERC721CollectionWriter, IERC721WriteClient } from "../types/client.js";
 import type { ERC721WriteClientOptions } from "../types/options.js";
 import { validateAddress } from "../helpers/validateAddress.js";
+import { ERC721CollectionWriter } from "./erc721CollectionWriter.js";
 import { ERC721ReadClient } from "./erc721ReadClient.js";
 
 export class ERC721WriteClient extends ERC721ReadClient implements IERC721WriteClient {
@@ -126,6 +127,10 @@ export class ERC721WriteClient extends ERC721ReadClient implements IERC721WriteC
         validateAddress(to);
         const args = data === undefined ? [from, to, tokenId] : [from, to, tokenId, data];
         return this.contract.execute(collection, "safeTransferFrom", args, options);
+    }
+
+    override forCollection(collection: Address): IERC721CollectionWriter {
+        return ERC721CollectionWriter.fromClient(this, collection);
     }
 }
 

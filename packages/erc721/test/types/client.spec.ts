@@ -1,5 +1,11 @@
 import type { ERC721Abi } from "@/abi/erc721Abi.js";
-import type { IERC721MultichainClient, IERC721Read, IERC721WriteClient } from "@/types/client.js";
+import type {
+    IERC721CollectionReader,
+    IERC721CollectionWriter,
+    IERC721MultichainClient,
+    IERC721Read,
+    IERC721WriteClient,
+} from "@/types/client.js";
 import type {
     BatchApprovalResult,
     BatchBalanceResult,
@@ -107,6 +113,11 @@ describe("IERC721Read interface", () => {
         >;
         expectTypeOf<GetTokenOfOwnerByIndexesReturn>().toEqualTypeOf<BatchTokenOfOwnerByIndexResult>();
     });
+
+    it("has forCollection method", () => {
+        type ForCollectionReturn = ReturnType<IERC721Read["forCollection"]>;
+        expectTypeOf<ForCollectionReturn>().toEqualTypeOf<IERC721CollectionReader>();
+    });
 });
 
 describe("IERC721WriteClient interface", () => {
@@ -155,6 +166,52 @@ describe("IERC721WriteClient interface", () => {
 
         type SafeTransferReturn = Awaited<ReturnType<IERC721WriteClient["safeTransferFrom"]>>;
         expectTypeOf<SafeTransferReturn>().toEqualTypeOf<Hash | TransactionReceipt>();
+    });
+
+    it("has forCollection method", () => {
+        type ForCollectionReturn = ReturnType<IERC721WriteClient["forCollection"]>;
+        expectTypeOf<ForCollectionReturn>().toEqualTypeOf<IERC721CollectionWriter>();
+    });
+});
+
+describe("IERC721CollectionReader interface", () => {
+    it("has bound read methods", () => {
+        expectTypeOf<IERC721CollectionReader["supportsInterface"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getCollectionMetadata"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getOwnerOf"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getBalance"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getApproved"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["isApprovedForAll"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTokenURI"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTotalSupply"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTokenByIndex"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTokenOfOwnerByIndex"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getOwners"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTokenURIs"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getApprovals"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getBalances"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getOperatorApprovals"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getInterfaceSupports"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTotalSupplies"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTokenByIndexes"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionReader["getTokenOfOwnerByIndexes"]>().toBeFunction();
+    });
+});
+
+describe("IERC721CollectionWriter interface", () => {
+    it("extends collection reader and adds write methods", () => {
+        expectTypeOf<IERC721CollectionWriter>().toMatchTypeOf<IERC721CollectionReader>();
+        expectTypeOf<IERC721CollectionWriter["prepareApprove"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["prepareSetApprovalForAll"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["prepareTransferFrom"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["prepareSafeTransferFrom"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["signTransaction"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["sendTransaction"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["waitForReceipt"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["approve"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["setApprovalForAll"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["transferFrom"]>().toBeFunction();
+        expectTypeOf<IERC721CollectionWriter["safeTransferFrom"]>().toBeFunction();
     });
 });
 

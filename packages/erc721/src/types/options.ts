@@ -1,5 +1,5 @@
 import type { ErrorDecoder } from "@0xtan0/chain-utils/core";
-import type { Abi, Chain, PublicClient, Transport, WalletClient } from "viem";
+import type { Abi, Address, Chain, PublicClient, Transport, WalletClient } from "viem";
 
 export interface ERC721ClientOptions {
     readonly client: PublicClient<Transport, Chain>;
@@ -10,6 +10,14 @@ export interface ERC721ClientOptions {
 
 export interface ERC721WriteClientOptions extends ERC721ClientOptions {
     readonly walletClient: WalletClient;
+}
+
+export interface ERC721CollectionReaderOptions extends ERC721ClientOptions {
+    readonly collection: Address;
+}
+
+export interface ERC721CollectionWriterOptions extends ERC721WriteClientOptions {
+    readonly collection: Address;
 }
 
 export interface ERC721MultichainClientOptions {

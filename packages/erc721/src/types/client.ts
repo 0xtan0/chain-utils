@@ -37,6 +37,16 @@ import type {
     TokenURI,
 } from "./token.js";
 
+export interface CollectionOperatorApprovalQuery {
+    readonly owner: Address;
+    readonly operator: Address;
+}
+
+export interface CollectionTokenOfOwnerByIndexQuery {
+    readonly owner: Address;
+    readonly index: bigint;
+}
+
 /**
  * Single-chain ERC721 read client.
  *
@@ -88,6 +98,10 @@ export interface IERC721Read {
     getTokenOfOwnerByIndexes(
         queries: ReadonlyArray<TokenOfOwnerByIndexQuery>,
     ): Promise<BatchTokenOfOwnerByIndexResult>;
+
+    // ---- Collection-bound reads ----
+
+    forCollection(collection: Address): IERC721CollectionReader;
 }
 
 /**
@@ -160,6 +174,82 @@ export interface IERC721WriteClient extends IERC721Read {
 
     safeTransferFrom(
         collection: Address,
+        from: Address,
+        to: Address,
+        tokenId: bigint,
+        data?: Hex,
+        options?: WriteOptions,
+    ): Promise<Hash | TransactionReceipt>;
+
+    forCollection(collection: Address): IERC721CollectionWriter;
+}
+
+export interface IERC721CollectionReader {
+    readonly collection: Address;
+    readonly chainId: number;
+    readonly supportsMulticall: boolean;
+    readonly readClient: IERC721Read;
+
+    supportsInterface(interfaceId: Hex): Promise<boolean>;
+    getCollectionMetadata(): Promise<CollectionMetadata>;
+    getOwnerOf(tokenId: bigint): Promise<TokenOwner>;
+    getBalance(owner: Address): Promise<bigint>;
+    getApproved(tokenId: bigint): Promise<TokenApproval>;
+    isApprovedForAll(owner: Address, operator: Address): Promise<OperatorApproval>;
+    getTokenURI(tokenId: bigint): Promise<TokenURI>;
+    getTotalSupply(): Promise<bigint>;
+    getTokenByIndex(index: bigint): Promise<bigint>;
+    getTokenOfOwnerByIndex(owner: Address, index: bigint): Promise<bigint>;
+
+    getOwners(tokenIds: ReadonlyArray<bigint>): Promise<BatchOwnerResult>;
+    getTokenURIs(tokenIds: ReadonlyArray<bigint>): Promise<BatchTokenURIResult>;
+    getApprovals(tokenIds: ReadonlyArray<bigint>): Promise<BatchApprovalResult>;
+    getBalances(owners: ReadonlyArray<Address>): Promise<BatchBalanceResult>;
+    getOperatorApprovals(
+        queries: ReadonlyArray<CollectionOperatorApprovalQuery>,
+    ): Promise<BatchOperatorApprovalResult>;
+    getInterfaceSupports(interfaceIds: ReadonlyArray<Hex>): Promise<BatchInterfaceSupportResult>;
+    getTotalSupplies(): Promise<BatchTotalSupplyResult>;
+    getTokenByIndexes(indexes: ReadonlyArray<bigint>): Promise<BatchTokenByIndexResult>;
+    getTokenOfOwnerByIndexes(
+        queries: ReadonlyArray<CollectionTokenOfOwnerByIndexQuery>,
+    ): Promise<BatchTokenOfOwnerByIndexResult>;
+}
+
+export interface IERC721CollectionWriter extends IERC721CollectionReader {
+    readonly writeClient: IERC721WriteClient;
+
+    prepareApprove(to: Address, tokenId: bigint): Promise<PreparedTransaction>;
+    prepareSetApprovalForAll(operator: Address, approved: boolean): Promise<PreparedTransaction>;
+    prepareTransferFrom(from: Address, to: Address, tokenId: bigint): Promise<PreparedTransaction>;
+    prepareSafeTransferFrom(
+        from: Address,
+        to: Address,
+        tokenId: bigint,
+        data?: Hex,
+    ): Promise<PreparedTransaction>;
+
+    signTransaction(prepared: PreparedTransaction): Promise<SignedTransaction>;
+    sendTransaction(signed: SignedTransaction): Promise<Hash>;
+    waitForReceipt(hash: Hash): Promise<TransactionReceipt>;
+
+    approve(
+        to: Address,
+        tokenId: bigint,
+        options?: WriteOptions,
+    ): Promise<Hash | TransactionReceipt>;
+    setApprovalForAll(
+        operator: Address,
+        approved: boolean,
+        options?: WriteOptions,
+    ): Promise<Hash | TransactionReceipt>;
+    transferFrom(
+        from: Address,
+        to: Address,
+        tokenId: bigint,
+        options?: WriteOptions,
+    ): Promise<Hash | TransactionReceipt>;
+    safeTransferFrom(
         from: Address,
         to: Address,
         tokenId: bigint,

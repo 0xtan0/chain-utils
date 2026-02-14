@@ -6,11 +6,15 @@ export type {
     // Client Interfaces
     IERC721Read,
     IERC721WriteClient,
+    IERC721CollectionReader,
+    IERC721CollectionWriter,
     IERC721MultichainClient,
 
     // Options Types
     ERC721ClientOptions,
     ERC721WriteClientOptions,
+    ERC721CollectionReaderOptions,
+    ERC721CollectionWriterOptions,
     ERC721MultichainClientOptions,
 
     // Data Types
@@ -22,6 +26,8 @@ export type {
     OperatorApproval,
     TokenURI,
     TokenURIResult,
+    CollectionOperatorApprovalQuery,
+    CollectionTokenOfOwnerByIndexQuery,
     OwnerQuery,
     TokenURIQuery,
     ApprovalQuery,
@@ -46,6 +52,14 @@ export type {
 // ---- Client Factories & Classes ----
 export { ERC721ReadClient, createERC721Client } from "./client/erc721ReadClient.js";
 export { ERC721WriteClient, createERC721WriteClient } from "./client/erc721WriteClient.js";
+export {
+    ERC721CollectionReader,
+    createERC721CollectionReader,
+} from "./client/erc721CollectionReader.js";
+export {
+    ERC721CollectionWriter,
+    createERC721CollectionWriter,
+} from "./client/erc721CollectionWriter.js";
 
 // ---- Error Decoder ----
 export { ERC721ErrorDecoder } from "./decoder/index.js";
