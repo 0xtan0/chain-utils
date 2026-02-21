@@ -5,6 +5,7 @@ import type {
 } from "@0xtan0/chain-utils/core";
 import type { Address, Chain, PublicClient, Transport } from "viem";
 import {
+    ChainUtilsFault,
     createMultichainClient,
     createMultichainContract,
     MultichainClient,
@@ -113,6 +114,7 @@ export class ERC20MultichainClient<TChainId extends number>
 
     forToken<TTokenChainId extends TChainId>(
         token: ITokenDefinition<TTokenChainId>,
+        returnIntersectionChains = false,
     ): ERC20Token<TTokenChainId> {
         const overlapping = this.#overlappingChains(token);
 
@@ -130,13 +132,35 @@ export class ERC20MultichainClient<TChainId extends number>
 
         const addresses = new Map<TTokenChainId, Address>();
         const readClients = new Map<TTokenChainId, IERC20Read>();
+        const multichainPublicClients = new Map<TTokenChainId, PublicClient<Transport, Chain>>();
+        const missingChains: number[] = [];
+
+        const sourceMultichainClient = this.multichain.multichainClient;
         for (const chainId of overlapping) {
+            if (!sourceMultichainClient.hasChain(chainId)) {
+                missingChains.push(chainId);
+                continue;
+            }
+
             addresses.set(chainId, token.address(chainId));
             readClients.set(chainId, this.getClient(chainId));
+            multichainPublicClients.set(chainId, sourceMultichainClient.getPublicClient(chainId));
         }
 
-        const multichainClient = this.multichain
-            .multichainClient as unknown as MultichainClient<TTokenChainId>;
+        if (missingChains.length > 0 && !returnIntersectionChains) {
+            throw new ChainUtilsFault(
+                "Token binding requires all overlapping chains to exist in the multichain RPC client",
+                {
+                    metaMessages: [
+                        `Token: ${token.symbol}`,
+                        `Missing chains: ${missingChains.join(", ")}`,
+                        `Available multichain RPC chains: ${this.multichain.multichainClient.chainIds.join(", ")}`,
+                    ],
+                },
+            );
+        }
+
+        const multichainClient = new MultichainClient(multichainPublicClients);
 
         return new ERC20BoundToken<TTokenChainId>({
             symbol: token.symbol,

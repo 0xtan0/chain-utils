@@ -165,5 +165,6 @@ export interface IERC20MultichainClient<TChainId extends number> {
 
     forToken<TTokenChainId extends TChainId>(
         token: ITokenDefinition<TTokenChainId>,
+        returnIntersectionChains?: boolean,
     ): ERC20Token<TTokenChainId>;
 }

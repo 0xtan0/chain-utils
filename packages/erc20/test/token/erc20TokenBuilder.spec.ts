@@ -237,6 +237,32 @@ describe("ERC20TokenBuilder", () => {
             expect(() => builder.build()).toThrow(ChainUtilsFault);
         });
 
+        it("throws when constructor-provided addresses are outside configured chains", () => {
+            const client = createMultichain(1);
+            const builder = new ERC20TokenBuilder<1, 1 | 137>(
+                client,
+                new Map<number, Address>([
+                    [1, USDC_MAINNET],
+                    [137, USDC_ARBITRUM],
+                ]),
+                { symbol: "USDC", name: "USD Coin", decimals: 6 },
+            );
+
+            try {
+                builder.build();
+                expect.unreachable("Expected build() to reject addresses outside client chains");
+            } catch (error) {
+                expect(error).toBeInstanceOf(ChainUtilsFault);
+                const fault = error as ChainUtilsFault;
+                expect(fault.shortMessage).toContain(
+                    "ERC20TokenBuilder chain assignments must be a subset of the MultichainClient chains",
+                );
+                expect(fault.metaMessages).toEqual(
+                    expect.arrayContaining(["Invalid chains: 137", "Available chains: 1"]),
+                );
+            }
+        });
+
         it("returns an ERC20Token", () => {
             const client = createMultichain(1);
             const token = new ERC20TokenBuilder(client)
