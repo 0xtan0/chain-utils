@@ -2,7 +2,9 @@ import type { Chain, PublicClient, Transport } from "viem";
 import { createPublicClient } from "viem";
 
 import type { ChainTransportConfig } from "../types/config.js";
+import { ChainUtilsFault } from "../errors/base.js";
 import { UnsupportedChain } from "../errors/chain.js";
+import { resolveChainFromConfig } from "../utils/chain.js";
 
 /**
  * A typed collection of PublicClients keyed by chain ID.
@@ -68,16 +70,32 @@ export function createMultichainClient<TChainId extends number>(
     inputs: readonly (PublicClient<Transport, Chain> | ChainTransportConfig)[],
 ): MultichainClient<TChainId> {
     const map = new Map<number, PublicClient<Transport, Chain>>();
+    const seenChainIds = new Set<number>();
 
     for (const input of inputs) {
         if ("request" in input) {
-            map.set(input.chain.id, input);
+            const chainId = input.chain.id;
+            if (seenChainIds.has(chainId)) {
+                throw new ChainUtilsFault("Duplicate chain ID in multichain client inputs", {
+                    metaMessages: [`Chain ID: ${chainId}`],
+                });
+            }
+            seenChainIds.add(chainId);
+            map.set(chainId, input);
         } else {
+            const chain = resolveChainFromConfig(input);
+            const chainId = chain.id;
+            if (seenChainIds.has(chainId)) {
+                throw new ChainUtilsFault("Duplicate chain ID in multichain client inputs", {
+                    metaMessages: [`Chain ID: ${chainId}`],
+                });
+            }
+            seenChainIds.add(chainId);
             const client = createPublicClient({
-                chain: input.chain,
+                chain,
                 transport: input.transport,
             });
-            map.set(input.chain.id, client);
+            map.set(chainId, client);
         }
     }
 

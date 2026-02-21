@@ -7,7 +7,11 @@ import { http } from "viem";
 import { mainnet, optimism } from "viem/chains";
 import { describe, expect, it, vi } from "vitest";
 
-import { mockChainWithMulticall, mockPublicClient } from "../mocks/publicClient.js";
+import {
+    mockChainWithMulticall,
+    mockChainWithoutMulticall,
+    mockPublicClient,
+} from "../mocks/publicClient.js";
 
 const TEST_ABI = [
     {
@@ -130,6 +134,23 @@ describe("MultichainContract", () => {
             const newClient = extended.getClient(10);
             expect(newClient).toBeInstanceOf(ContractClient);
             expect(newClient.chainId).toBe(10);
+        });
+
+        it("applies multicallAddress override when adding a ChainTransportConfig", () => {
+            const mc = buildMultichainContract([1]);
+            const multicallAddress = "0xcA11bde05977b3631167028862bE2a173976CA11";
+
+            const extended = mc.withChain({
+                chain: mockChainWithoutMulticall(10),
+                transport: http(),
+                multicallAddress,
+            });
+
+            const client = extended.getClient(10);
+            const chain = extended.multichainClient.getPublicClient(10).chain;
+
+            expect(client.supportsMulticall).toBe(true);
+            expect(chain.contracts?.multicall3?.address).toBe(multicallAddress);
         });
     });
 
@@ -267,5 +288,38 @@ describe("createMultichainContract", () => {
 
         expect(mc).toBeInstanceOf(MultichainContract);
         expect(mc.chainIds).toEqual([1, 10]);
+    });
+
+    it("applies multicallAddress override for config-based creation", () => {
+        const multicallAddress = "0xcA11bde05977b3631167028862bE2a173976CA11";
+        const mc = createMultichainContract({
+            abi: TEST_ABI,
+            configs: [
+                {
+                    chain: mockChainWithoutMulticall(11155111),
+                    transport: http(),
+                    multicallAddress,
+                },
+            ],
+        });
+
+        const client = mc.getClient(11155111);
+        const chain = mc.multichainClient.getPublicClient(11155111).chain;
+
+        expect(client.supportsMulticall).toBe(true);
+        expect(chain.contracts?.multicall3?.address).toBe(multicallAddress);
+    });
+
+    it("keeps plain config-based creation behavior unchanged", () => {
+        const mc = createMultichainContract({
+            abi: TEST_ABI,
+            configs: [{ chain: mockChainWithoutMulticall(11155111), transport: http() }],
+        });
+
+        const client = mc.getClient(11155111);
+        const chain = mc.multichainClient.getPublicClient(11155111).chain;
+
+        expect(client.supportsMulticall).toBe(false);
+        expect(chain.contracts?.multicall3).toBeUndefined();
     });
 });

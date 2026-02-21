@@ -5,6 +5,7 @@ import type { ErrorDecoder } from "../decoder/errorDecoder.js";
 import type { ChainTransportConfig } from "../types/config.js";
 import type { BatchResult, CrossChainBatchResult } from "../types/multicall.js";
 import { UnsupportedChain } from "../errors/chain.js";
+import { resolveChainFromConfig } from "../utils/chain.js";
 import { ContractClient } from "./contractClient.js";
 import { createMultichainClient, MultichainClient } from "./multichainClient.js";
 
@@ -52,7 +53,10 @@ export class MultichainContract<TAbi extends Abi, TChainId extends number> {
         const publicClient =
             "request" in input
                 ? input
-                : createPublicClient({ chain: input.chain, transport: input.transport });
+                : createPublicClient({
+                      chain: resolveChainFromConfig(input),
+                      transport: input.transport,
+                  });
 
         const newMultichainClient = this.multichainClient.withChain<TNewChainId>(publicClient);
         const newContractClient = new ContractClient<TAbi>({
