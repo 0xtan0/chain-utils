@@ -14,6 +14,7 @@ export interface ERC20BoundTokenOptions<TChainId extends number> {
     readonly decimals: number;
     readonly addresses: ReadonlyMap<TChainId, Address>;
     readonly multichainClient: MultichainClient<TChainId>;
+    readonly readClients?: ReadonlyMap<TChainId, IERC20Read>;
 }
 
 export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TChainId> {
@@ -24,6 +25,7 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
 
     readonly #addresses: ReadonlyMap<TChainId, Address>;
     readonly #multichainClient: MultichainClient<TChainId>;
+    readonly #readClients?: ReadonlyMap<TChainId, IERC20Read>;
     readonly #clients: Map<TChainId, IERC20Read> = new Map();
 
     constructor(options: ERC20BoundTokenOptions<TChainId>) {
@@ -32,6 +34,7 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
         this.decimals = options.decimals;
         this.#addresses = options.addresses;
         this.#multichainClient = options.multichainClient;
+        this.#readClients = options.readClients;
         this.chainIds = [...options.addresses.keys()];
     }
 
@@ -89,11 +92,13 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
     #getReadClient(chainId: TChainId): IERC20Read {
         let client = this.#clients.get(chainId);
         if (!client) {
-            const publicClient = this.#multichainClient.getPublicClient(chainId) as PublicClient<
-                Transport,
-                Chain
-            >;
-            client = new ERC20ReadClient({ client: publicClient });
+            client = this.#readClients?.get(chainId);
+            if (!client) {
+                const publicClient = this.#multichainClient.getPublicClient(
+                    chainId,
+                ) as PublicClient<Transport, Chain>;
+                client = new ERC20ReadClient({ client: publicClient });
+            }
             this.#clients.set(chainId, client);
         }
         return client;

@@ -1,9 +1,9 @@
-import type { MultichainClient } from "@0xtan0/chain-utils/core";
-import type { Address, Chain } from "viem";
-import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
+import type { Address, Chain, PublicClient, Transport } from "viem";
+import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils/core";
 
 import type { ERC20Token } from "../types/erc20Token.js";
 import type { ITokenDefinition } from "../types/tokenDefinition.js";
+import { validateAddress } from "../helpers/validateAddress.js";
 import { ERC20BoundToken } from "./erc20Token.js";
 
 interface ERC20TokenMeta {
@@ -58,6 +58,8 @@ export class ERC20TokenBuilder<
                 },
             );
         }
+
+        validateAddress(address);
 
         const next = new Map(this.#addresses);
         next.set(chainId, address);
@@ -123,13 +125,41 @@ export class ERC20TokenBuilder<
             );
         }
 
-        const multichainClient = this.#client as unknown as MultichainClient<TTokenChainId>;
+        const availableChains = new Set<number>(this.#client.chainIds as ReadonlyArray<number>);
+        const invalidChains = [...this.#addresses.keys()].filter(
+            (chainId) => !availableChains.has(chainId),
+        );
+
+        if (invalidChains.length > 0) {
+            throw new ChainUtilsFault(
+                "ERC20TokenBuilder chain assignments must be a subset of the MultichainClient chains",
+                {
+                    metaMessages: [
+                        `Invalid chains: ${invalidChains.join(", ")}`,
+                        `Available chains: ${this.#client.chainIds.join(", ")}`,
+                    ],
+                },
+            );
+        }
+
+        const addresses = new Map<TTokenChainId, Address>();
+        const multichainPublicClients = new Map<TTokenChainId, PublicClient<Transport, Chain>>();
+        for (const [chainId, address] of this.#addresses) {
+            const tokenChainId = chainId as TTokenChainId;
+            addresses.set(tokenChainId, address);
+            multichainPublicClients.set(
+                tokenChainId,
+                this.#client.getPublicClient(chainId as TClientChainId),
+            );
+        }
+
+        const multichainClient = new MultichainClient(multichainPublicClients);
 
         return new ERC20BoundToken<TTokenChainId>({
             symbol: this.#meta.symbol,
             name: this.#meta.name,
             decimals: this.#meta.decimals,
-            addresses: this.#addresses as unknown as ReadonlyMap<TTokenChainId, Address>,
+            addresses,
             multichainClient,
         });
     }

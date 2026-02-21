@@ -8,10 +8,12 @@ import {
 } from "@/client/erc20MultichainClient.js";
 import { defineToken } from "@/token/tokenBuilder.js";
 import {
+    ChainUtilsFault,
     ContractClient,
     createMultichainContract,
     MultichainClient,
     MultichainContract,
+    UnsupportedChain,
 } from "@0xtan0/chain-utils/core";
 import { describe, expect, it, vi } from "vitest";
 
@@ -118,7 +120,14 @@ describe("ERC20MultichainClient", () => {
 
         it("throws for an unconfigured chain", () => {
             const { impl } = createTestImpl();
-            expect(() => (impl as ERC20MultichainClient<number>).getClient(137)).toThrow();
+            try {
+                (impl as ERC20MultichainClient<number>).getClient(137);
+                expect.unreachable("should have thrown");
+            } catch (error) {
+                expect(error).toBeInstanceOf(UnsupportedChain);
+                expect((error as UnsupportedChain).chainId).toBe(137);
+                expect((error as UnsupportedChain).availableChainIds).toEqual([1, 10]);
+            }
         });
     });
 
@@ -411,6 +420,118 @@ describe("ERC20MultichainClient", () => {
                 .build();
 
             expect(() => impl.forToken(definition)).toThrow("must have name and decimals");
+        });
+
+        it("throws typed fault when read-client and multichain RPC subsets diverge", () => {
+            const clients = new Map<1 | 10, IERC20Read>([
+                [1, mockERC20Read(1)],
+                [10, mockERC20Read(10)],
+            ]);
+
+            const multichain = createMultichainContract({
+                abi: erc20Abi,
+                multichainClient: new MultichainClient(
+                    new Map<1 | 10, PublicClient<Transport, Chain>>([[1, mockPublicClient(1)]]),
+                ),
+            });
+
+            const impl = new ERC20MultichainClient(clients, multichain);
+
+            const definition = defineToken("USDC", { name: "USD Coin", decimals: 6 })
+                .onChain(10 as const, TOKEN_OP)
+                .build();
+
+            try {
+                impl.forToken(definition);
+                expect.unreachable("Expected forToken() to throw for missing multichain RPC chain");
+            } catch (error) {
+                expect(error).toBeInstanceOf(ChainUtilsFault);
+                const fault = error as ChainUtilsFault;
+                expect(fault.shortMessage).toContain(
+                    "Token binding requires all overlapping chains to exist in the multichain RPC client",
+                );
+                expect(fault.metaMessages).toEqual(
+                    expect.arrayContaining([
+                        "Token: USDC",
+                        "Missing chains: 10",
+                        "Available multichain RPC chains: 1",
+                    ]),
+                );
+            }
+        });
+
+        it("returns only intersection chains when requested for missing multichain RPC chains", () => {
+            const clients = new Map<1 | 10, IERC20Read>([
+                [1, mockERC20Read(1)],
+                [10, mockERC20Read(10)],
+            ]);
+
+            const multichain = createMultichainContract({
+                abi: erc20Abi,
+                multichainClient: new MultichainClient(
+                    new Map<1 | 10, PublicClient<Transport, Chain>>([[1, mockPublicClient(1)]]),
+                ),
+            });
+
+            const impl = new ERC20MultichainClient(clients, multichain);
+
+            const definition = defineToken("USDC", { name: "USD Coin", decimals: 6 })
+                .onChain(1 as const, TOKEN)
+                .onChain(10 as const, TOKEN_OP)
+                .build();
+
+            const bound = impl.forToken(definition, true);
+
+            expect(bound.chainIds).toEqual([1]);
+            expect(bound.getAddress(1)).toBe(TOKEN);
+        });
+
+        it("reuses configured read clients in bound-token flow", async () => {
+            const pc1 = mockPublicClient(1);
+            const customErrorAbi = [
+                {
+                    type: "error",
+                    name: "CustomTokenError",
+                    inputs: [{ name: "code", type: "uint256" }],
+                },
+            ] as const;
+            const client = createERC20MultichainClient([pc1], { customErrorAbi });
+            const definition = defineToken("USDC", { name: "USD Coin", decimals: 6 })
+                .onChain(1 as const, TOKEN)
+                .build();
+
+            const reusedGetBalance = vi.fn().mockResolvedValue({
+                token: { address: TOKEN, chainId: 1 },
+                holder: HOLDER,
+                balance: 123n,
+            });
+            client.getClient(1).getBalance = reusedGetBalance;
+
+            const bound = client.forToken(definition);
+            const result = await bound.getBalance(HOLDER, [1]);
+
+            expect(reusedGetBalance).toHaveBeenCalledWith(TOKEN, HOLDER);
+            expect(result.resultsByChain.get(1)).toEqual({
+                token: { address: TOKEN, chainId: 1 },
+                holder: HOLDER,
+                balance: 123n,
+            });
+        });
+
+        it("preserves default multicall batch size in bound-token flow", async () => {
+            const multicall = vi.fn().mockResolvedValue([{ status: "success", result: 100n }]);
+            const pc1 = mockPublicClient(1, vi.fn(), multicall);
+            const client = createERC20MultichainClient([pc1], {
+                defaultMulticallBatchSize: 321,
+            });
+            const definition = defineToken("USDC", { name: "USD Coin", decimals: 6 })
+                .onChain(1 as const, TOKEN)
+                .build();
+
+            const bound = client.forToken(definition);
+            await bound.getBalances([HOLDER], [1]);
+
+            expect(multicall).toHaveBeenCalledWith(expect.objectContaining({ batchSize: 321 }));
         });
     });
 });

@@ -1,5 +1,6 @@
 import type { ITokenDefinition } from "@/types/tokenDefinition.js";
 import type { Address, Chain } from "viem";
+import { InvalidAddress } from "@/errors/contract.js";
 import { defineToken } from "@/token/tokenBuilder.js";
 import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
 import { describe, expect, expectTypeOf, it } from "vitest";
@@ -48,6 +49,12 @@ describe("defineToken", () => {
                 .build();
 
             expect(token.address(1)).toBe(USDC_MAINNET);
+        });
+
+        it("throws InvalidAddress when registering an invalid address", () => {
+            expect(() => defineToken("USDC").onChain(mainnet, "bad-address" as Address)).toThrow(
+                InvalidAddress,
+            );
         });
 
         it("throws when building with no chains", () => {
