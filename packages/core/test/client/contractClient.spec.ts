@@ -401,6 +401,62 @@ describe("ContractClient", () => {
             );
             expect(errorDecoder.decode).not.toHaveBeenCalled();
         });
+
+        it("decodes revert data through errorDecoder when gas estimation fails", async () => {
+            const rawData: Hex = "0xdeadbeef";
+            const causeWithData = Object.assign(new BaseError("inner revert"), { data: rawData });
+            const estimateError = new BaseError("estimateGas revert", { cause: causeWithData });
+            const simulateContract = vi.fn().mockResolvedValue({ request: {} });
+            const estimateGas = vi.fn().mockRejectedValue(estimateError);
+            const pc = mockPublicClient(mockChainWithMulticall(1), {
+                simulateContract,
+                estimateGas,
+            });
+
+            const decoded = new ContractReverted({
+                rawData,
+                decodedMessage: "Insufficient balance",
+            });
+            const errorDecoder: ErrorDecoder = { decode: vi.fn().mockReturnValue(decoded) };
+
+            const client = new ContractClient({
+                abi: TEST_ABI,
+                publicClient: pc,
+                errorDecoder,
+            });
+
+            await expect(client.prepare(TEST_ADDRESS, "balanceOf", [OTHER_ADDRESS])).rejects.toBe(
+                decoded,
+            );
+            expect(simulateContract).toHaveBeenCalled();
+            expect(estimateGas).toHaveBeenCalled();
+            expect(errorDecoder.decode).toHaveBeenCalledWith(rawData);
+        });
+
+        it("throws original error when gas estimation fails without revert data", async () => {
+            const estimateError = new BaseError("estimateGas failed");
+            const simulateContract = vi.fn().mockResolvedValue({ request: {} });
+            const estimateGas = vi.fn().mockRejectedValue(estimateError);
+            const pc = mockPublicClient(mockChainWithMulticall(1), {
+                simulateContract,
+                estimateGas,
+            });
+
+            const errorDecoder: ErrorDecoder = { decode: vi.fn() };
+
+            const client = new ContractClient({
+                abi: TEST_ABI,
+                publicClient: pc,
+                errorDecoder,
+            });
+
+            await expect(client.prepare(TEST_ADDRESS, "balanceOf", [OTHER_ADDRESS])).rejects.toBe(
+                estimateError,
+            );
+            expect(simulateContract).toHaveBeenCalled();
+            expect(estimateGas).toHaveBeenCalled();
+            expect(errorDecoder.decode).not.toHaveBeenCalled();
+        });
     });
 
     describe("sign", () => {
