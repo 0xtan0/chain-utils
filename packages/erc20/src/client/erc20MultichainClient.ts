@@ -8,6 +8,7 @@ import {
     createMultichainClient,
     createMultichainContract,
     MultichainClient,
+    UnsupportedChain,
 } from "@0xtan0/chain-utils/core";
 
 import type { ERC20Abi } from "../abi/erc20Abi.js";
@@ -46,7 +47,9 @@ export class ERC20MultichainClient<TChainId extends number>
     getClient(chainId: TChainId): IERC20Read {
         const client = this.#clients.get(chainId);
         if (!client) {
-            throw new Error(`No ERC20 client configured for chain ${String(chainId)}`);
+            throw new UnsupportedChain(chainId, {
+                availableChainIds: [...this.chainIds],
+            });
         }
         return client;
     }

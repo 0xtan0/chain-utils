@@ -12,6 +12,7 @@ import {
     createMultichainContract,
     MultichainClient,
     MultichainContract,
+    UnsupportedChain,
 } from "@0xtan0/chain-utils/core";
 import { describe, expect, it, vi } from "vitest";
 
@@ -118,7 +119,14 @@ describe("ERC20MultichainClient", () => {
 
         it("throws for an unconfigured chain", () => {
             const { impl } = createTestImpl();
-            expect(() => (impl as ERC20MultichainClient<number>).getClient(137)).toThrow();
+            try {
+                (impl as ERC20MultichainClient<number>).getClient(137);
+                expect.unreachable("should have thrown");
+            } catch (error) {
+                expect(error).toBeInstanceOf(UnsupportedChain);
+                expect((error as UnsupportedChain).chainId).toBe(137);
+                expect((error as UnsupportedChain).availableChainIds).toEqual([1, 10]);
+            }
         });
     });
 
