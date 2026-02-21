@@ -1,6 +1,7 @@
 import type { ERC20Token } from "@/types/erc20Token.js";
 import type { ITokenDefinition } from "@/types/tokenDefinition.js";
 import type { Address, Chain, PublicClient, Transport } from "viem";
+import { InvalidAddress } from "@/errors/contract.js";
 import { ERC20TokenBuilder } from "@/token/erc20TokenBuilder.js";
 import { defineToken } from "@/token/tokenBuilder.js";
 import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils/core";
@@ -87,6 +88,19 @@ describe("ERC20TokenBuilder", () => {
                 .build();
 
             expect(token.getAddress(1 as never)).toBe(USDC_MAINNET);
+        });
+
+        it("throws InvalidAddress when registering an invalid address", () => {
+            const client = createMultichain(1);
+            const builder = new ERC20TokenBuilder(client).metadata({
+                symbol: "USDC",
+                name: "USD Coin",
+                decimals: 6,
+            });
+
+            expect(() => builder.onChain(1 as const, "bad-address" as Address)).toThrow(
+                InvalidAddress,
+            );
         });
 
         it("throws when adding a chain not in the MultichainClient", () => {

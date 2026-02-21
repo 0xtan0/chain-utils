@@ -4,6 +4,7 @@ import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
 
 import type { ERC20Token } from "../types/erc20Token.js";
 import type { ITokenDefinition } from "../types/tokenDefinition.js";
+import { validateAddress } from "../helpers/validateAddress.js";
 import { ERC20BoundToken } from "./erc20Token.js";
 
 interface ERC20TokenMeta {
@@ -58,6 +59,8 @@ export class ERC20TokenBuilder<
                 },
             );
         }
+
+        validateAddress(address);
 
         const next = new Map(this.#addresses);
         next.set(chainId, address);

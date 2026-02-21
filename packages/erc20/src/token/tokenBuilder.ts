@@ -3,6 +3,7 @@ import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
 
 import type { TokenMetadata, TokenReference } from "../types/token.js";
 import type { ITokenDefinition } from "../types/tokenDefinition.js";
+import { validateAddress } from "../helpers/validateAddress.js";
 
 /**
  * Intermediate builder state: accumulating chain mappings via .onChain().
@@ -118,6 +119,7 @@ export class TokenBuilder<TChainId extends number = never> {
         address: Address,
     ): ITokenBuilder<TChainId | TId> {
         const chainId = typeof chainOrId === "number" ? chainOrId : chainOrId.id;
+        validateAddress(address);
         const next = new Map(this.#addresses);
         next.set(chainId, address);
         // The ITokenBuilder interface overloads provide type-safe chain ID tracking.
