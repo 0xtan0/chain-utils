@@ -2,6 +2,7 @@ import type { ErrorDecoder } from "@/decoder/errorDecoder.js";
 import type { Abi, Address, Hash, Hex, WalletClient } from "viem";
 import { ContractClient, createContractClient } from "@/client/contractClient.js";
 import { ChainUtilsFault } from "@/errors/base.js";
+import { MulticallBatchFailure } from "@/errors/multicall.js";
 import { ContractReverted } from "@/errors/revert.js";
 import { BaseError } from "viem";
 import { describe, expect, it, vi } from "vitest";
@@ -217,6 +218,48 @@ describe("ContractClient", () => {
 
                 expect(multicall).toHaveBeenCalledWith(expect.objectContaining({ batchSize: 512 }));
             });
+
+            it("wraps multicall transport errors in MulticallBatchFailure", async () => {
+                const transportError = new Error("rpc down");
+                const multicall = vi.fn().mockRejectedValue(transportError);
+                const pc = mockPublicClient(mockChainWithMulticall(1), { multicall });
+
+                const client = new ContractClient({ abi: TEST_ABI, publicClient: pc });
+                const reading = client.readBatch(calls);
+
+                await expect(reading).rejects.toThrow(MulticallBatchFailure);
+                await expect(reading).rejects.toMatchObject({
+                    chainId: 1,
+                    batchSize: calls.length,
+                    cause: transportError,
+                });
+            });
+
+            it("uses sequential fallback when multicallBatchSize is zero", async () => {
+                const multicall = vi.fn();
+                const readContract = vi
+                    .fn()
+                    .mockResolvedValueOnce(1000n)
+                    .mockResolvedValueOnce(5000n);
+                const pc = mockPublicClient(mockChainWithMulticall(1), {
+                    multicall,
+                    readContract,
+                });
+
+                const client = new ContractClient({
+                    abi: TEST_ABI,
+                    publicClient: pc,
+                    multicallBatchSize: 0,
+                });
+                const batch = await client.readBatch(calls);
+
+                expect(multicall).not.toHaveBeenCalled();
+                expect(readContract).toHaveBeenCalledTimes(2);
+                expect(batch.results).toEqual([
+                    { status: "success", result: 1000n },
+                    { status: "success", result: 5000n },
+                ]);
+            });
         });
 
         describe("without multicall support (sequential fallback)", () => {
@@ -283,8 +326,11 @@ describe("ContractClient", () => {
         });
 
         it("returns empty results for empty calls array", async () => {
+            const multicall = vi.fn().mockRejectedValue(new Error("must not be called"));
+            const readContract = vi.fn().mockRejectedValue(new Error("must not be called"));
             const pc = mockPublicClient(mockChainWithMulticall(1), {
-                multicall: vi.fn().mockResolvedValue([]),
+                multicall,
+                readContract,
             });
 
             const client = new ContractClient({ abi: TEST_ABI, publicClient: pc });
@@ -292,6 +338,8 @@ describe("ContractClient", () => {
 
             expect(batch.results).toEqual([]);
             expect(batch.chainId).toBe(1);
+            expect(multicall).not.toHaveBeenCalled();
+            expect(readContract).not.toHaveBeenCalled();
         });
     });
 
@@ -401,6 +449,62 @@ describe("ContractClient", () => {
             );
             expect(errorDecoder.decode).not.toHaveBeenCalled();
         });
+
+        it("decodes revert data through errorDecoder when gas estimation fails", async () => {
+            const rawData: Hex = "0xdeadbeef";
+            const causeWithData = Object.assign(new BaseError("inner revert"), { data: rawData });
+            const estimateError = new BaseError("estimateGas revert", { cause: causeWithData });
+            const simulateContract = vi.fn().mockResolvedValue({ request: {} });
+            const estimateGas = vi.fn().mockRejectedValue(estimateError);
+            const pc = mockPublicClient(mockChainWithMulticall(1), {
+                simulateContract,
+                estimateGas,
+            });
+
+            const decoded = new ContractReverted({
+                rawData,
+                decodedMessage: "Insufficient balance",
+            });
+            const errorDecoder: ErrorDecoder = { decode: vi.fn().mockReturnValue(decoded) };
+
+            const client = new ContractClient({
+                abi: TEST_ABI,
+                publicClient: pc,
+                errorDecoder,
+            });
+
+            await expect(client.prepare(TEST_ADDRESS, "balanceOf", [OTHER_ADDRESS])).rejects.toBe(
+                decoded,
+            );
+            expect(simulateContract).toHaveBeenCalled();
+            expect(estimateGas).toHaveBeenCalled();
+            expect(errorDecoder.decode).toHaveBeenCalledWith(rawData);
+        });
+
+        it("throws original error when gas estimation fails without revert data", async () => {
+            const estimateError = new BaseError("estimateGas failed");
+            const simulateContract = vi.fn().mockResolvedValue({ request: {} });
+            const estimateGas = vi.fn().mockRejectedValue(estimateError);
+            const pc = mockPublicClient(mockChainWithMulticall(1), {
+                simulateContract,
+                estimateGas,
+            });
+
+            const errorDecoder: ErrorDecoder = { decode: vi.fn() };
+
+            const client = new ContractClient({
+                abi: TEST_ABI,
+                publicClient: pc,
+                errorDecoder,
+            });
+
+            await expect(client.prepare(TEST_ADDRESS, "balanceOf", [OTHER_ADDRESS])).rejects.toBe(
+                estimateError,
+            );
+            expect(simulateContract).toHaveBeenCalled();
+            expect(estimateGas).toHaveBeenCalled();
+            expect(errorDecoder.decode).not.toHaveBeenCalled();
+        });
     });
 
     describe("sign", () => {
@@ -426,6 +530,31 @@ describe("ContractClient", () => {
             );
             expect(signed.serialized).toBe("0xsigned");
             expect(signed.chainId).toBe(1);
+        });
+
+        it("throws ChainUtilsFault when prepared transaction chain does not match client chain", async () => {
+            const signTransaction = vi.fn().mockResolvedValue("0xsigned");
+            const pc = mockPublicClient(mockChainWithMulticall(1));
+            const wc = mockWalletClient({ signTransaction });
+
+            const client = new ContractClient({
+                abi: TEST_ABI,
+                publicClient: pc,
+                walletClient: wc,
+            });
+
+            const signing = client.sign({
+                request: { to: TEST_ADDRESS, data: "0x1234" },
+                gasEstimate: 21000n,
+                chainId: 10,
+            });
+
+            await expect(signing).rejects.toThrow(ChainUtilsFault);
+            await expect(signing).rejects.toMatchObject({
+                shortMessage: "Prepared transaction chain ID does not match client chain ID",
+                metaMessages: ["Expected chain ID: 1", "Actual chain ID: 10"],
+            });
+            expect(signTransaction).not.toHaveBeenCalled();
         });
 
         it("throws ChainUtilsFault when walletClient is not provided", async () => {
@@ -476,6 +605,21 @@ describe("ContractClient", () => {
                 serializedTransaction: "0xsigned",
             });
             expect(hash).toBe(txHash);
+        });
+
+        it("throws ChainUtilsFault when signed transaction chain does not match client chain", async () => {
+            const sendRawTransaction = vi.fn();
+            const pc = mockPublicClient(mockChainWithMulticall(1), { sendRawTransaction });
+
+            const client = new ContractClient({ abi: TEST_ABI, publicClient: pc });
+            const sending = client.send({ serialized: "0xsigned", chainId: 10 });
+
+            await expect(sending).rejects.toThrow(ChainUtilsFault);
+            await expect(sending).rejects.toMatchObject({
+                shortMessage: "Signed transaction chain ID does not match client chain ID",
+                metaMessages: ["Expected chain ID: 1", "Actual chain ID: 10"],
+            });
+            expect(sendRawTransaction).not.toHaveBeenCalled();
         });
     });
 

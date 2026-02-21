@@ -18,6 +18,7 @@ import type { ErrorDecoder } from "../decoder/errorDecoder.js";
 import type { BatchResult, MulticallItemResult } from "../types/multicall.js";
 import type { PreparedTransaction, SignedTransaction, WriteOptions } from "../types/transaction.js";
 import { ChainUtilsFault } from "../errors/base.js";
+import { MulticallBatchFailure } from "../errors/multicall.js";
 
 export interface ContractClientOptions<TAbi extends Abi> {
     readonly abi: TAbi;
@@ -67,7 +68,11 @@ export class ContractClient<TAbi extends Abi> {
             args?: ReadonlyArray<unknown>;
         }>,
     ): Promise<BatchResult<unknown>> {
-        if (this.supportsMulticall) {
+        if (calls.length === 0) {
+            return { chainId: this.chainId, results: [] };
+        }
+
+        if (this.supportsMulticall && this.multicallBatchSize !== 0) {
             return this.readBatchMulticall(calls);
         }
         return this.readBatchSequential(calls);
@@ -87,11 +92,20 @@ export class ContractClient<TAbi extends Abi> {
             args: call.args ? [...call.args] : undefined,
         }));
 
-        const raw = await this.publicClient.multicall({
-            contracts,
-            allowFailure: true,
-            ...(this.multicallBatchSize ? { batchSize: this.multicallBatchSize } : {}),
-        });
+        let raw;
+        try {
+            raw = await this.publicClient.multicall({
+                contracts,
+                allowFailure: true,
+                ...(this.multicallBatchSize ? { batchSize: this.multicallBatchSize } : {}),
+            });
+        } catch (error) {
+            const cause =
+                error instanceof Error
+                    ? error
+                    : new Error(typeof error === "string" ? error : String(error));
+            throw new MulticallBatchFailure(this.chainId, calls.length, { cause });
+        }
 
         const results: MulticallItemResult<unknown>[] = raw.map((item) => {
             if (item.status === "success") {
@@ -129,33 +143,39 @@ export class ContractClient<TAbi extends Abi> {
         });
 
         const account = this.walletClient?.account;
-        const [gasEstimate, fees, nonce] = await Promise.all([
-            this.publicClient.estimateGas({
-                to: address,
-                data,
-                account,
-            }),
-            this.publicClient.estimateFeesPerGas(),
-            account
-                ? this.publicClient.getTransactionCount({ address: account.address })
-                : Promise.resolve(undefined),
-        ]);
+        try {
+            const [gasEstimate, fees, nonce] = await Promise.all([
+                this.publicClient.estimateGas({
+                    to: address,
+                    data,
+                    account,
+                }),
+                this.publicClient.estimateFeesPerGas(),
+                account
+                    ? this.publicClient.getTransactionCount({ address: account.address })
+                    : Promise.resolve(undefined),
+            ]);
 
-        return {
-            request: {
-                to: address,
-                data,
-                gas: gasEstimate,
-                nonce,
-                maxFeePerGas: fees.maxFeePerGas,
-                maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
-            },
-            gasEstimate,
-            chainId: this.chainId,
-        };
+            return {
+                request: {
+                    to: address,
+                    data,
+                    gas: gasEstimate,
+                    nonce,
+                    maxFeePerGas: fees.maxFeePerGas,
+                    maxPriorityFeePerGas: fees.maxPriorityFeePerGas,
+                },
+                gasEstimate,
+                chainId: this.chainId,
+            };
+        } catch (error) {
+            this.throwDecodedRevert(error);
+        }
     }
 
     async sign(prepared: PreparedTransaction): Promise<SignedTransaction> {
+        this.assertChainConsistency(prepared.chainId, "Prepared transaction");
+
         const walletClient = this.requireWalletClient();
         const { account } = walletClient;
         if (!account) {
@@ -170,6 +190,8 @@ export class ContractClient<TAbi extends Abi> {
     }
 
     async send(signed: SignedTransaction): Promise<Hash> {
+        this.assertChainConsistency(signed.chainId, "Signed transaction");
+
         return this.publicClient.sendRawTransaction({
             serializedTransaction: signed.serialized,
         });
@@ -220,6 +242,17 @@ export class ContractClient<TAbi extends Abi> {
             if (isHex(data)) return data;
         }
         return undefined;
+    }
+
+    private assertChainConsistency(actualChainId: number, payloadLabel: string): void {
+        if (actualChainId !== this.chainId) {
+            throw new ChainUtilsFault(`${payloadLabel} chain ID does not match client chain ID`, {
+                metaMessages: [
+                    `Expected chain ID: ${this.chainId}`,
+                    `Actual chain ID: ${actualChainId}`,
+                ],
+            });
+        }
     }
 
     private async readBatchSequential(
