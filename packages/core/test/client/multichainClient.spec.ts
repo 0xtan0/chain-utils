@@ -5,7 +5,7 @@ import { http } from "viem";
 import { mainnet, optimism } from "viem/chains";
 import { describe, expect, it } from "vitest";
 
-import { mockPublicClient } from "../mocks/publicClient.js";
+import { mockChainWithoutMulticall, mockPublicClient } from "../mocks/publicClient.js";
 
 describe("MultichainClient", () => {
     describe("constructor", () => {
@@ -155,11 +155,48 @@ describe("createMultichainClient", () => {
         expect(mc.chainIds).toEqual([1, 10]);
     });
 
+    it("applies multicallAddress override for ChainTransportConfig inputs", () => {
+        const multicallAddress = "0xcA11bde05977b3631167028862bE2a173976CA11";
+        const configs = [
+            {
+                chain: mockChainWithoutMulticall(11155111),
+                transport: http(),
+                multicallAddress,
+            },
+        ] as const;
+
+        const mc = createMultichainClient(configs);
+        const chain = mc.getPublicClient(11155111).chain;
+
+        expect(chain.contracts?.multicall3?.address).toBe(multicallAddress);
+    });
+
+    it("keeps plain ChainTransportConfig behavior unchanged", () => {
+        const configs = [
+            { chain: mockChainWithoutMulticall(11155111), transport: http() },
+        ] as const;
+
+        const mc = createMultichainClient(configs);
+        const chain = mc.getPublicClient(11155111).chain;
+
+        expect(chain.contracts?.multicall3).toBeUndefined();
+    });
+
     it("extracts chain IDs from PublicClient.chain.id", () => {
         const client = mockPublicClient(8453);
 
         const mc = createMultichainClient([client]);
 
         expect(mc.hasChain(8453)).toBe(true);
+    });
+
+    it("keeps pre-built PublicClient behavior unchanged", () => {
+        const client = mockPublicClient(mockChainWithoutMulticall(8453));
+
+        const mc = createMultichainClient([client]);
+        const chain = mc.getPublicClient(8453).chain;
+
+        expect(chain).toBe(client.chain);
+        expect(chain.contracts?.multicall3).toBeUndefined();
     });
 });

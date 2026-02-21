@@ -3,6 +3,7 @@ import { createPublicClient } from "viem";
 
 import type { ChainTransportConfig } from "../types/config.js";
 import { UnsupportedChain } from "../errors/chain.js";
+import { resolveChainFromConfig } from "../utils/chain.js";
 
 /**
  * A typed collection of PublicClients keyed by chain ID.
@@ -73,11 +74,12 @@ export function createMultichainClient<TChainId extends number>(
         if ("request" in input) {
             map.set(input.chain.id, input);
         } else {
+            const chain = resolveChainFromConfig(input);
             const client = createPublicClient({
-                chain: input.chain,
+                chain,
                 transport: input.transport,
             });
-            map.set(input.chain.id, client);
+            map.set(chain.id, client);
         }
     }
 
