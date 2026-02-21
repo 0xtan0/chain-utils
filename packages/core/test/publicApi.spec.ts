@@ -19,6 +19,7 @@ import {
     createContractClient,
     createMultichainClient,
     createMultichainContract,
+    formatDecodedErrorArgs,
     MulticallBatchFailure,
     MulticallNotSupported,
     MulticallPartialFailure,
@@ -42,6 +43,10 @@ describe("public API smoke test", () => {
 
     it("exports decoder classes", () => {
         expect(CompositeErrorDecoder).toBeDefined();
+    });
+
+    it("exports utility helpers", () => {
+        expect(formatDecodedErrorArgs).toBeDefined();
     });
 
     it("exports client classes and factories", () => {

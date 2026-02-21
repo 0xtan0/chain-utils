@@ -17,6 +17,9 @@ export { ContractReverted } from "./errors/revert.js";
 export type { ErrorDecoder } from "./decoder/errorDecoder.js";
 export { CompositeErrorDecoder } from "./decoder/compositeDecoder.js";
 
+// ---- Utils ----
+export { formatDecodedErrorArgs } from "./utils/errorArgs.js";
+
 // ---- Client ----
 export { MultichainClient, createMultichainClient } from "./client/multichainClient.js";
 export { ContractClient, createContractClient } from "./client/contractClient.js";

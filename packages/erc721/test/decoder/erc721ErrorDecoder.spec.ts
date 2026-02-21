@@ -166,6 +166,57 @@ describe("ERC721ErrorDecoder", () => {
             const result = overlappingDecoder.decode(rawData);
             expect(result).toBeInstanceOf(InvalidOwner);
         });
+
+        it("formats complex custom error args with nested tuples and arrays", () => {
+            const complexCustomAbi = [
+                {
+                    type: "error" as const,
+                    name: "ComplexFailure",
+                    inputs: [
+                        { name: "account", type: "address" as const },
+                        { name: "tokenIds", type: "uint256[]" as const },
+                        {
+                            name: "details",
+                            type: "tuple" as const,
+                            components: [
+                                { name: "id", type: "uint256" as const },
+                                { name: "approved", type: "bool" as const },
+                                { name: "reason", type: "string" as const },
+                            ],
+                        },
+                        {
+                            name: "history",
+                            type: "tuple[]" as const,
+                            components: [
+                                { name: "operator", type: "address" as const },
+                                { name: "ok", type: "bool" as const },
+                            ],
+                        },
+                    ],
+                },
+            ];
+            const complexDecoder = new ERC721ErrorDecoder(complexCustomAbi);
+            const rawData = encodeErrorResult({
+                abi: complexCustomAbi,
+                errorName: "ComplexFailure",
+                args: [
+                    owner,
+                    [41n, 42n],
+                    { id: 42n, approved: false, reason: "blocked" },
+                    [{ operator, ok: true }],
+                ],
+            });
+
+            const result = complexDecoder.decode(rawData);
+
+            expect(result).toBeInstanceOf(ContractReverted);
+            const decodedMessage = (result as ContractReverted).decodedMessage;
+            expect(decodedMessage).toContain("ComplexFailure (");
+            expect(decodedMessage).toContain(`"${owner}"`);
+            expect(decodedMessage).toContain("[41n, 42n]");
+            expect(decodedMessage).toContain('{ approved: false, id: 42n, reason: "blocked" }');
+            expect(decodedMessage).toContain(`[{ ok: true, operator: "${operator}" }]`);
+        });
     });
 
     describe("legacy string reverts", () => {
