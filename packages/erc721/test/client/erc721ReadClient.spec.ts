@@ -9,6 +9,7 @@ import {
 import { describe, expect, it, vi } from "vitest";
 
 const COLLECTION = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address;
+const NON_ENUMERABLE_COLLECTION = "0x1111111111111111111111111111111111111111" as Address;
 const OWNER = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045" as Address;
 const OWNER2 = "0xBE0eB53F46cd790Cd13851d5EFf43D12404d33E8" as Address;
 
@@ -176,6 +177,139 @@ describe("ERC721ReadClient", () => {
                 { status: "success", result: OWNER2 },
             ]);
             expect(result.failures).toEqual([{ query: queries[1], error }]);
+        });
+
+        it("handles 10 owner queries while preserving order and partial failures", async () => {
+            const failureIndexes = [1, 4, 8] as const;
+            const errorsByIndex = new Map<number, Error>(
+                failureIndexes.map((index) => [index, new Error(`revert-${index}`)]),
+            );
+
+            const readContract = vi.fn();
+            for (let i = 0; i < 10; i += 1) {
+                const error = errorsByIndex.get(i);
+                if (error) {
+                    readContract.mockRejectedValueOnce(error);
+                } else {
+                    readContract.mockResolvedValueOnce(i % 2 === 0 ? OWNER : OWNER2);
+                }
+            }
+
+            const client = new ERC721ReadClient(
+                createOptions({
+                    client: mockPublicClient(mockChain(1, false), { readContract }),
+                }),
+            );
+
+            const queries = Array.from({ length: 10 }, (_, index) => ({
+                collection: COLLECTION,
+                tokenId: BigInt(index + 1),
+            }));
+
+            const result = await client.getOwners(queries);
+            const expectedResults = queries.map((_, index) => {
+                const error = errorsByIndex.get(index);
+                if (error) {
+                    return { status: "failure" as const, error };
+                }
+                return {
+                    status: "success" as const,
+                    result: index % 2 === 0 ? OWNER : OWNER2,
+                };
+            });
+            const expectedFailures = failureIndexes.map((index) => ({
+                query: queries[index]!,
+                error: errorsByIndex.get(index)!,
+            }));
+
+            expect(result.chainId).toBe(1);
+            expect(result.queries).toEqual(queries);
+            expect(result.results).toEqual(expectedResults);
+            expect(result.failures).toEqual(expectedFailures);
+            expect(readContract).toHaveBeenCalledTimes(10);
+        });
+    });
+
+    describe("enumerable batch semantics", () => {
+        it("getTotalSupplies keeps partial failures for non-enumerable collections", async () => {
+            const readContract = vi.fn();
+            readContract
+                .mockResolvedValueOnce(true)
+                .mockResolvedValueOnce(false)
+                .mockResolvedValueOnce(100n);
+
+            const client = new ERC721ReadClient(
+                createOptions({
+                    client: mockPublicClient(mockChain(1, false), { readContract }),
+                }),
+            );
+
+            const queries = [{ collection: COLLECTION }, { collection: NON_ENUMERABLE_COLLECTION }];
+
+            const result = await client.getTotalSupplies(queries);
+
+            expect(result.results[0]).toEqual({ status: "success", result: 100n });
+            expect(result.results[1]?.status).toBe("failure");
+            expect(result.failures).toHaveLength(1);
+            expect(result.failures[0]?.query).toEqual(queries[1]);
+            expect(result.failures[0]?.error).toBeInstanceOf(NotERC721Enumerable);
+            expect(readContract).toHaveBeenCalledTimes(3);
+        });
+
+        it("getTokenByIndexes keeps partial failures for non-enumerable collections", async () => {
+            const readContract = vi.fn();
+            readContract
+                .mockResolvedValueOnce(true)
+                .mockResolvedValueOnce(false)
+                .mockResolvedValueOnce(7n);
+
+            const client = new ERC721ReadClient(
+                createOptions({
+                    client: mockPublicClient(mockChain(1, false), { readContract }),
+                }),
+            );
+
+            const queries = [
+                { collection: COLLECTION, index: 0n },
+                { collection: NON_ENUMERABLE_COLLECTION, index: 0n },
+            ];
+
+            const result = await client.getTokenByIndexes(queries);
+
+            expect(result.results[0]).toEqual({ status: "success", result: 7n });
+            expect(result.results[1]?.status).toBe("failure");
+            expect(result.failures).toHaveLength(1);
+            expect(result.failures[0]?.query).toEqual(queries[1]);
+            expect(result.failures[0]?.error).toBeInstanceOf(NotERC721Enumerable);
+            expect(readContract).toHaveBeenCalledTimes(3);
+        });
+
+        it("getTokenOfOwnerByIndexes keeps partial failures for non-enumerable collections", async () => {
+            const readContract = vi.fn();
+            readContract
+                .mockResolvedValueOnce(true)
+                .mockResolvedValueOnce(false)
+                .mockResolvedValueOnce(9n);
+
+            const client = new ERC721ReadClient(
+                createOptions({
+                    client: mockPublicClient(mockChain(1, false), { readContract }),
+                }),
+            );
+
+            const queries = [
+                { collection: COLLECTION, owner: OWNER, index: 0n },
+                { collection: NON_ENUMERABLE_COLLECTION, owner: OWNER, index: 0n },
+            ];
+
+            const result = await client.getTokenOfOwnerByIndexes(queries);
+
+            expect(result.results[0]).toEqual({ status: "success", result: 9n });
+            expect(result.results[1]?.status).toBe("failure");
+            expect(result.failures).toHaveLength(1);
+            expect(result.failures[0]?.query).toEqual(queries[1]);
+            expect(result.failures[0]?.error).toBeInstanceOf(NotERC721Enumerable);
+            expect(readContract).toHaveBeenCalledTimes(3);
         });
     });
 });

@@ -287,14 +287,10 @@ export class ERC721ReadClient implements IERC721Read {
             validateAddress(query.collection);
         }
 
-        await this.assertEnumerableBatch(queries.map((q) => q.collection));
-
-        const calls = queries.map((q) => ({
-            address: q.collection,
+        const batch = await this.readEnumerableBatch(queries, (query) => ({
+            address: query.collection,
             functionName: "totalSupply",
         }));
-
-        const batch = await this.contract.readBatch(calls);
         const { results, failures } = this.toBatchResults<bigint, TotalSupplyQuery>(
             batch.results,
             queries,
@@ -310,15 +306,11 @@ export class ERC721ReadClient implements IERC721Read {
             validateAddress(query.collection);
         }
 
-        await this.assertEnumerableBatch(queries.map((q) => q.collection));
-
-        const calls = queries.map((q) => ({
+        const batch = await this.readEnumerableBatch(queries, (q) => ({
             address: q.collection,
             functionName: "tokenByIndex",
             args: [q.index],
         }));
-
-        const batch = await this.contract.readBatch(calls);
         const { results, failures } = this.toBatchResults<bigint, TokenByIndexQuery>(
             batch.results,
             queries,
@@ -335,15 +327,11 @@ export class ERC721ReadClient implements IERC721Read {
             validateAddress(query.owner);
         }
 
-        await this.assertEnumerableBatch(queries.map((q) => q.collection));
-
-        const calls = queries.map((q) => ({
+        const batch = await this.readEnumerableBatch(queries, (q) => ({
             address: q.collection,
             functionName: "tokenOfOwnerByIndex",
             args: [q.owner, q.index],
         }));
-
-        const batch = await this.contract.readBatch(calls);
         const { results, failures } = this.toBatchResults<bigint, TokenOfOwnerByIndexQuery>(
             batch.results,
             queries,
@@ -373,9 +361,67 @@ export class ERC721ReadClient implements IERC721Read {
         }
     }
 
-    private async assertEnumerableBatch(collections: ReadonlyArray<Address>): Promise<void> {
+    private async getEnumerableSupportMap(
+        collections: ReadonlyArray<Address>,
+    ): Promise<ReadonlyMap<Address, boolean>> {
         const uniqueCollections = Array.from(new Set(collections));
-        await Promise.all(uniqueCollections.map((collection) => this.assertEnumerable(collection)));
+        const supportEntries = await Promise.all(
+            uniqueCollections.map(async (collection) => {
+                const supported = await this.contract.read(collection, "supportsInterface", [
+                    ERC721_ENUMERABLE_INTERFACE_ID,
+                ]);
+
+                return [collection, supported] as const;
+            }),
+        );
+
+        return new Map(supportEntries);
+    }
+
+    private async readEnumerableBatch<TQuery extends { readonly collection: Address }>(
+        queries: ReadonlyArray<TQuery>,
+        toCall: (query: TQuery) => {
+            address: Address;
+            functionName: string;
+            args?: ReadonlyArray<unknown>;
+        },
+    ): Promise<{
+        chainId: number;
+        results: ReadonlyArray<MulticallItemResult<unknown>>;
+    }> {
+        const supportMap = await this.getEnumerableSupportMap(
+            queries.map((query) => query.collection),
+        );
+
+        const calls = queries
+            .filter((query) => supportMap.get(query.collection) === true)
+            .map((query) => toCall(query));
+
+        const supportedBatch =
+            calls.length > 0
+                ? await this.contract.readBatch(calls)
+                : {
+                      chainId: this.chainId,
+                      results: [] as ReadonlyArray<MulticallItemResult<unknown>>,
+                  };
+
+        const results: MulticallItemResult<unknown>[] = [];
+        let supportedIndex = 0;
+
+        for (const query of queries) {
+            if (supportMap.get(query.collection) !== true) {
+                results.push({
+                    status: "failure",
+                    error: new NotERC721Enumerable(query.collection, this.chainId),
+                });
+                continue;
+            }
+
+            results.push(supportedBatch.results[supportedIndex]!);
+            supportedIndex += 1;
+        }
+
+        return { chainId: supportedBatch.chainId, results };
     }
 
     private toBatchResults<T, TQuery>(
