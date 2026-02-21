@@ -1,5 +1,6 @@
 import type { Chain, PublicClient, Transport } from "viem";
 import { createMultichainClient, MultichainClient } from "@/client/multichainClient.js";
+import { ChainUtilsFault } from "@/errors/base.js";
 import { UnsupportedChain } from "@/errors/chain.js";
 import { http } from "viem";
 import { mainnet, optimism } from "viem/chains";
@@ -198,5 +199,39 @@ describe("createMultichainClient", () => {
 
         expect(chain).toBe(client.chain);
         expect(chain.contracts?.multicall3).toBeUndefined();
+    });
+
+    it("throws ChainUtilsFault on duplicate PublicClient chain IDs", () => {
+        const first = mockPublicClient(1);
+        const duplicate = mockPublicClient(1);
+
+        try {
+            createMultichainClient([first, duplicate]);
+            expect.unreachable("should have thrown");
+        } catch (error) {
+            expect(error).toBeInstanceOf(ChainUtilsFault);
+            expect((error as ChainUtilsFault).shortMessage).toBe(
+                "Duplicate chain ID in multichain client inputs",
+            );
+            expect((error as ChainUtilsFault).metaMessages).toEqual(["Chain ID: 1"]);
+        }
+    });
+
+    it("throws ChainUtilsFault on duplicate config chain IDs", () => {
+        const configs = [
+            { chain: mainnet, transport: http() },
+            { chain: mainnet, transport: http() },
+        ] as const;
+
+        try {
+            createMultichainClient(configs);
+            expect.unreachable("should have thrown");
+        } catch (error) {
+            expect(error).toBeInstanceOf(ChainUtilsFault);
+            expect((error as ChainUtilsFault).shortMessage).toBe(
+                "Duplicate chain ID in multichain client inputs",
+            );
+            expect((error as ChainUtilsFault).metaMessages).toEqual(["Chain ID: 1"]);
+        }
     });
 });
