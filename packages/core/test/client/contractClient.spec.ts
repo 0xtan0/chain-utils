@@ -428,6 +428,31 @@ describe("ContractClient", () => {
             expect(signed.chainId).toBe(1);
         });
 
+        it("throws ChainUtilsFault when prepared transaction chain does not match client chain", async () => {
+            const signTransaction = vi.fn().mockResolvedValue("0xsigned");
+            const pc = mockPublicClient(mockChainWithMulticall(1));
+            const wc = mockWalletClient({ signTransaction });
+
+            const client = new ContractClient({
+                abi: TEST_ABI,
+                publicClient: pc,
+                walletClient: wc,
+            });
+
+            const signing = client.sign({
+                request: { to: TEST_ADDRESS, data: "0x1234" },
+                gasEstimate: 21000n,
+                chainId: 10,
+            });
+
+            await expect(signing).rejects.toThrow(ChainUtilsFault);
+            await expect(signing).rejects.toMatchObject({
+                shortMessage: "Prepared transaction chain ID does not match client chain ID",
+                metaMessages: ["Expected chain ID: 1", "Actual chain ID: 10"],
+            });
+            expect(signTransaction).not.toHaveBeenCalled();
+        });
+
         it("throws ChainUtilsFault when walletClient is not provided", async () => {
             const pc = mockPublicClient(mockChainWithMulticall(1));
 
@@ -476,6 +501,21 @@ describe("ContractClient", () => {
                 serializedTransaction: "0xsigned",
             });
             expect(hash).toBe(txHash);
+        });
+
+        it("throws ChainUtilsFault when signed transaction chain does not match client chain", async () => {
+            const sendRawTransaction = vi.fn();
+            const pc = mockPublicClient(mockChainWithMulticall(1), { sendRawTransaction });
+
+            const client = new ContractClient({ abi: TEST_ABI, publicClient: pc });
+            const sending = client.send({ serialized: "0xsigned", chainId: 10 });
+
+            await expect(sending).rejects.toThrow(ChainUtilsFault);
+            await expect(sending).rejects.toMatchObject({
+                shortMessage: "Signed transaction chain ID does not match client chain ID",
+                metaMessages: ["Expected chain ID: 1", "Actual chain ID: 10"],
+            });
+            expect(sendRawTransaction).not.toHaveBeenCalled();
         });
     });
 

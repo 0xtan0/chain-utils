@@ -156,6 +156,8 @@ export class ContractClient<TAbi extends Abi> {
     }
 
     async sign(prepared: PreparedTransaction): Promise<SignedTransaction> {
+        this.assertChainConsistency(prepared.chainId, "Prepared transaction");
+
         const walletClient = this.requireWalletClient();
         const { account } = walletClient;
         if (!account) {
@@ -170,6 +172,8 @@ export class ContractClient<TAbi extends Abi> {
     }
 
     async send(signed: SignedTransaction): Promise<Hash> {
+        this.assertChainConsistency(signed.chainId, "Signed transaction");
+
         return this.publicClient.sendRawTransaction({
             serializedTransaction: signed.serialized,
         });
@@ -220,6 +224,17 @@ export class ContractClient<TAbi extends Abi> {
             if (isHex(data)) return data;
         }
         return undefined;
+    }
+
+    private assertChainConsistency(actualChainId: number, payloadLabel: string): void {
+        if (actualChainId !== this.chainId) {
+            throw new ChainUtilsFault(`${payloadLabel} chain ID does not match client chain ID`, {
+                metaMessages: [
+                    `Expected chain ID: ${this.chainId}`,
+                    `Actual chain ID: ${actualChainId}`,
+                ],
+            });
+        }
     }
 
     private async readBatchSequential(
