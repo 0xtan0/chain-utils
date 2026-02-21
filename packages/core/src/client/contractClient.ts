@@ -18,6 +18,7 @@ import type { ErrorDecoder } from "../decoder/errorDecoder.js";
 import type { BatchResult, MulticallItemResult } from "../types/multicall.js";
 import type { PreparedTransaction, SignedTransaction, WriteOptions } from "../types/transaction.js";
 import { ChainUtilsFault } from "../errors/base.js";
+import { MulticallBatchFailure } from "../errors/multicall.js";
 
 export interface ContractClientOptions<TAbi extends Abi> {
     readonly abi: TAbi;
@@ -67,7 +68,11 @@ export class ContractClient<TAbi extends Abi> {
             args?: ReadonlyArray<unknown>;
         }>,
     ): Promise<BatchResult<unknown>> {
-        if (this.supportsMulticall) {
+        if (calls.length === 0) {
+            return { chainId: this.chainId, results: [] };
+        }
+
+        if (this.supportsMulticall && this.multicallBatchSize !== 0) {
             return this.readBatchMulticall(calls);
         }
         return this.readBatchSequential(calls);
@@ -87,11 +92,20 @@ export class ContractClient<TAbi extends Abi> {
             args: call.args ? [...call.args] : undefined,
         }));
 
-        const raw = await this.publicClient.multicall({
-            contracts,
-            allowFailure: true,
-            ...(this.multicallBatchSize ? { batchSize: this.multicallBatchSize } : {}),
-        });
+        let raw;
+        try {
+            raw = await this.publicClient.multicall({
+                contracts,
+                allowFailure: true,
+                ...(this.multicallBatchSize ? { batchSize: this.multicallBatchSize } : {}),
+            });
+        } catch (error) {
+            const cause =
+                error instanceof Error
+                    ? error
+                    : new Error(typeof error === "string" ? error : String(error));
+            throw new MulticallBatchFailure(this.chainId, calls.length, { cause });
+        }
 
         const results: MulticallItemResult<unknown>[] = raw.map((item) => {
             if (item.status === "success") {

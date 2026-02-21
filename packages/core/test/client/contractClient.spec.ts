@@ -2,6 +2,7 @@ import type { ErrorDecoder } from "@/decoder/errorDecoder.js";
 import type { Abi, Address, Hash, Hex, WalletClient } from "viem";
 import { ContractClient, createContractClient } from "@/client/contractClient.js";
 import { ChainUtilsFault } from "@/errors/base.js";
+import { MulticallBatchFailure } from "@/errors/multicall.js";
 import { ContractReverted } from "@/errors/revert.js";
 import { BaseError } from "viem";
 import { describe, expect, it, vi } from "vitest";
@@ -217,6 +218,48 @@ describe("ContractClient", () => {
 
                 expect(multicall).toHaveBeenCalledWith(expect.objectContaining({ batchSize: 512 }));
             });
+
+            it("wraps multicall transport errors in MulticallBatchFailure", async () => {
+                const transportError = new Error("rpc down");
+                const multicall = vi.fn().mockRejectedValue(transportError);
+                const pc = mockPublicClient(mockChainWithMulticall(1), { multicall });
+
+                const client = new ContractClient({ abi: TEST_ABI, publicClient: pc });
+                const reading = client.readBatch(calls);
+
+                await expect(reading).rejects.toThrow(MulticallBatchFailure);
+                await expect(reading).rejects.toMatchObject({
+                    chainId: 1,
+                    batchSize: calls.length,
+                    cause: transportError,
+                });
+            });
+
+            it("uses sequential fallback when multicallBatchSize is zero", async () => {
+                const multicall = vi.fn();
+                const readContract = vi
+                    .fn()
+                    .mockResolvedValueOnce(1000n)
+                    .mockResolvedValueOnce(5000n);
+                const pc = mockPublicClient(mockChainWithMulticall(1), {
+                    multicall,
+                    readContract,
+                });
+
+                const client = new ContractClient({
+                    abi: TEST_ABI,
+                    publicClient: pc,
+                    multicallBatchSize: 0,
+                });
+                const batch = await client.readBatch(calls);
+
+                expect(multicall).not.toHaveBeenCalled();
+                expect(readContract).toHaveBeenCalledTimes(2);
+                expect(batch.results).toEqual([
+                    { status: "success", result: 1000n },
+                    { status: "success", result: 5000n },
+                ]);
+            });
         });
 
         describe("without multicall support (sequential fallback)", () => {
@@ -283,8 +326,11 @@ describe("ContractClient", () => {
         });
 
         it("returns empty results for empty calls array", async () => {
+            const multicall = vi.fn().mockRejectedValue(new Error("must not be called"));
+            const readContract = vi.fn().mockRejectedValue(new Error("must not be called"));
             const pc = mockPublicClient(mockChainWithMulticall(1), {
-                multicall: vi.fn().mockResolvedValue([]),
+                multicall,
+                readContract,
             });
 
             const client = new ContractClient({ abi: TEST_ABI, publicClient: pc });
@@ -292,6 +338,8 @@ describe("ContractClient", () => {
 
             expect(batch.results).toEqual([]);
             expect(batch.chainId).toBe(1);
+            expect(multicall).not.toHaveBeenCalled();
+            expect(readContract).not.toHaveBeenCalled();
         });
     });
 
