@@ -126,8 +126,10 @@ export class ERC20MultichainClient<TChainId extends number>
         }
 
         const addresses = new Map<TTokenChainId, Address>();
+        const readClients = new Map<TTokenChainId, IERC20Read>();
         for (const chainId of overlapping) {
             addresses.set(chainId, token.address(chainId));
+            readClients.set(chainId, this.getClient(chainId));
         }
 
         const multichainClient = this.multichain
@@ -139,6 +141,7 @@ export class ERC20MultichainClient<TChainId extends number>
             decimals: token.decimals,
             addresses,
             multichainClient,
+            readClients,
         });
     }
 

@@ -412,6 +412,54 @@ describe("ERC20MultichainClient", () => {
 
             expect(() => impl.forToken(definition)).toThrow("must have name and decimals");
         });
+
+        it("reuses configured read clients in bound-token flow", async () => {
+            const pc1 = mockPublicClient(1);
+            const customErrorAbi = [
+                {
+                    type: "error",
+                    name: "CustomTokenError",
+                    inputs: [{ name: "code", type: "uint256" }],
+                },
+            ] as const;
+            const client = createERC20MultichainClient([pc1], { customErrorAbi });
+            const definition = defineToken("USDC", { name: "USD Coin", decimals: 6 })
+                .onChain(1 as const, TOKEN)
+                .build();
+
+            const reusedGetBalance = vi.fn().mockResolvedValue({
+                token: { address: TOKEN, chainId: 1 },
+                holder: HOLDER,
+                balance: 123n,
+            });
+            client.getClient(1).getBalance = reusedGetBalance;
+
+            const bound = client.forToken(definition);
+            const result = await bound.getBalance(HOLDER, [1]);
+
+            expect(reusedGetBalance).toHaveBeenCalledWith(TOKEN, HOLDER);
+            expect(result.resultsByChain.get(1)).toEqual({
+                token: { address: TOKEN, chainId: 1 },
+                holder: HOLDER,
+                balance: 123n,
+            });
+        });
+
+        it("preserves default multicall batch size in bound-token flow", async () => {
+            const multicall = vi.fn().mockResolvedValue([{ status: "success", result: 100n }]);
+            const pc1 = mockPublicClient(1, vi.fn(), multicall);
+            const client = createERC20MultichainClient([pc1], {
+                defaultMulticallBatchSize: 321,
+            });
+            const definition = defineToken("USDC", { name: "USD Coin", decimals: 6 })
+                .onChain(1 as const, TOKEN)
+                .build();
+
+            const bound = client.forToken(definition);
+            await bound.getBalances([HOLDER], [1]);
+
+            expect(multicall).toHaveBeenCalledWith(expect.objectContaining({ batchSize: 321 }));
+        });
     });
 });
 
