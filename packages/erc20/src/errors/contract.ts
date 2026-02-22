@@ -1,10 +1,17 @@
 import type { Address } from "viem";
 import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
 
+/**
+ * Error thrown when an address input is not a valid EVM address.
+ */
 export class InvalidAddress extends ChainUtilsFault {
     override readonly name = "InvalidAddress";
     readonly address: string;
 
+    /**
+     * @param {string} address Invalid address input.
+     * @returns {InvalidAddress} Structured invalid-address error.
+     */
     constructor(address: string) {
         super(`Invalid address: ${address}`, {
             metaMessages: [`Address: ${address}`],
@@ -13,11 +20,20 @@ export class InvalidAddress extends ChainUtilsFault {
     }
 }
 
+/**
+ * Error thrown when a contract does not behave as ERC20.
+ */
 export class NotERC20Contract extends ChainUtilsFault {
     override readonly name = "NotERC20Contract";
     readonly address: Address;
     readonly chainId: number;
 
+    /**
+     * @param {Address} address Contract address.
+     * @param {number} chainId Chain ID where validation failed.
+     * @param {{ cause?: Error }} [options] Optional underlying cause.
+     * @returns {NotERC20Contract} Structured non-ERC20 contract error.
+     */
     constructor(address: Address, chainId: number, options?: { cause?: Error }) {
         super(`Contract at ${address} on chain ${chainId} is not an ERC20 token`, {
             cause: options?.cause,

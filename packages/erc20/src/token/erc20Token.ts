@@ -8,6 +8,17 @@ import type { BatchAllowanceResult, BatchBalanceResult } from "../types/query.js
 import type { TokenBalance } from "../types/token.js";
 import { ERC20ReadClient } from "../client/erc20ReadClient.js";
 
+/**
+ * Construction options for `ERC20BoundToken`.
+ *
+ * @template TChainId Literal union of chain IDs where the token is bound.
+ * @property {string} symbol Token symbol.
+ * @property {string} name Token name.
+ * @property {number} decimals Token decimals.
+ * @property {ReadonlyMap<TChainId, Address>} addresses Chain-to-address map.
+ * @property {MultichainClient<TChainId>} multichainClient Public-client registry used for lazy reader creation.
+ * @property {ReadonlyMap<TChainId, IERC20Read>} [readClients] Optional pre-built read clients per chain.
+ */
 export interface ERC20BoundTokenOptions<TChainId extends number> {
     readonly symbol: string;
     readonly name: string;
@@ -17,6 +28,20 @@ export interface ERC20BoundTokenOptions<TChainId extends number> {
     readonly readClients?: ReadonlyMap<TChainId, IERC20Read>;
 }
 
+/**
+ * Bound ERC20 token helper.
+ *
+ * Combines chain-specific addresses with multichain RPC access and exposes
+ * chain-aware read operations.
+ *
+ * @template TChainId Literal union of chain IDs where the token is bound.
+ *
+ * @example
+ * ```ts
+ * const usdc = multichainClient.forToken(USDC);
+ * const balances = await usdc.getBalance(holder);
+ * ```
+ */
 export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TChainId> {
     readonly symbol: string;
     readonly name: string;
@@ -28,6 +53,10 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
     readonly #readClients?: ReadonlyMap<TChainId, IERC20Read>;
     readonly #clients: Map<TChainId, IERC20Read> = new Map();
 
+    /**
+     * @param {ERC20BoundTokenOptions<TChainId>} options Bound token options.
+     * @returns {ERC20BoundToken<TChainId>} Bound token instance.
+     */
     constructor(options: ERC20BoundTokenOptions<TChainId>) {
         this.symbol = options.symbol;
         this.name = options.name;
@@ -38,6 +67,13 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
         this.chainIds = [...options.addresses.keys()];
     }
 
+    /**
+     * Returns token address for a chain.
+     *
+     * @param {TChainId} chainId Target chain ID.
+     * @returns {Address} Token address.
+     * @throws {ChainUtilsFault} Thrown when the token is not bound on `chainId`.
+     */
     getAddress(chainId: TChainId): Address {
         const addr = this.#addresses.get(chainId);
         if (addr === undefined) {
@@ -55,6 +91,13 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
         return addr;
     }
 
+    /**
+     * Reads holder balance across bound chains.
+     *
+     * @param {Address} holder Holder wallet address.
+     * @param {ReadonlyArray<TChainId>} [chainIds] Optional chain subset; defaults to all bound chains.
+     * @returns {Promise<CrossChainBatchResult<TokenBalance>>} Per-chain success/failure balance results.
+     */
     async getBalance(
         holder: Address,
         chainIds?: ReadonlyArray<TChainId>,
@@ -65,6 +108,13 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
         );
     }
 
+    /**
+     * Reads balances for multiple holders across bound chains.
+     *
+     * @param {ReadonlyArray<Address>} holders Holder wallet addresses.
+     * @param {ReadonlyArray<TChainId>} [chainIds] Optional chain subset; defaults to all bound chains.
+     * @returns {Promise<CrossChainBatchResult<BatchBalanceResult>>} Per-chain success/failure batch results.
+     */
     async getBalances(
         holders: ReadonlyArray<Address>,
         chainIds?: ReadonlyArray<TChainId>,
@@ -77,6 +127,14 @@ export class ERC20BoundToken<TChainId extends number> implements ERC20Token<TCha
         });
     }
 
+    /**
+     * Reads allowance across bound chains.
+     *
+     * @param {Address} owner Token owner address.
+     * @param {Address} spender Spender address.
+     * @param {ReadonlyArray<TChainId>} [chainIds] Optional chain subset; defaults to all bound chains.
+     * @returns {Promise<CrossChainBatchResult<BatchAllowanceResult>>} Per-chain success/failure allowance results.
+     */
     async getAllowance(
         owner: Address,
         spender: Address,

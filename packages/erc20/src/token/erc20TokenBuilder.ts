@@ -17,6 +17,9 @@ interface ERC20TokenMeta {
  *
  * TClientChainId — all chain IDs the MultichainClient supports.
  * TTokenChainId  — chain IDs accumulated so far via .onChain().
+ *
+ * @template TClientChainId Literal union of chain IDs supported by the source multichain client.
+ * @template TTokenChainId Literal union of chain IDs currently configured on the token.
  */
 export class ERC20TokenBuilder<
     TClientChainId extends number,
@@ -26,6 +29,12 @@ export class ERC20TokenBuilder<
     readonly #addresses: Map<number, Address>;
     #meta: ERC20TokenMeta;
 
+    /**
+     * @param {MultichainClient<TClientChainId>} client Source multichain public-client registry.
+     * @param {Map<number, Address>} [addresses] Internal chain-to-address state.
+     * @param {ERC20TokenMeta} [meta] Internal metadata state.
+     * @returns {ERC20TokenBuilder<TClientChainId, TTokenChainId>} Fluent bound-token builder.
+     */
     constructor(
         client: MultichainClient<TClientChainId>,
         addresses?: Map<number, Address>,
@@ -36,11 +45,27 @@ export class ERC20TokenBuilder<
         this.#meta = meta ?? {};
     }
 
+    /**
+     * Merges token metadata into the builder state.
+     *
+     * @param {ERC20TokenMeta} meta Partial metadata to merge.
+     * @returns {this} Current builder instance for fluent chaining.
+     */
     metadata(meta: ERC20TokenMeta): this {
         this.#meta = { ...this.#meta, ...meta };
         return this;
     }
 
+    /**
+     * Adds or replaces token address for a chain.
+     *
+     * @template TId Chain ID literal constrained to source client chains.
+     * @param {TId | Chain} chainOrId Chain object or numeric chain ID.
+     * @param {Address} address Token address on that chain.
+     * @returns {ERC20TokenBuilder<TClientChainId, TTokenChainId | TId>} New immutable builder with extended token chain set.
+     * @throws {ChainUtilsFault} Thrown when the chain is not configured in the source multichain client.
+     * @throws {InvalidAddress} Thrown when `address` is not a valid EVM address.
+     */
     onChain<TId extends TClientChainId>(
         chainOrId: TId | Chain,
         address: Address,
@@ -70,6 +95,15 @@ export class ERC20TokenBuilder<
         );
     }
 
+    /**
+     * Imports addresses and metadata from an existing token definition.
+     *
+     * Only chains that are supported by the source multichain client are copied.
+     *
+     * @template TDefChainId Chain ID union from the source token definition.
+     * @param {ITokenDefinition<TDefChainId>} definition Source token definition.
+     * @returns {ERC20TokenBuilder<TClientChainId, TTokenChainId | TDefChainId>} New immutable builder enriched from definition data.
+     */
     fromDefinition<TDefChainId extends TClientChainId>(
         definition: ITokenDefinition<TDefChainId>,
     ): ERC20TokenBuilder<TClientChainId, TTokenChainId | TDefChainId> {
@@ -95,6 +129,12 @@ export class ERC20TokenBuilder<
         );
     }
 
+    /**
+     * Finalizes and returns a bound ERC20 token helper.
+     *
+     * @returns {ERC20Token<TTokenChainId>} Bound ERC20 token instance.
+     * @throws {ChainUtilsFault} Thrown when no chains are configured, required metadata is missing, or chain assignments are invalid.
+     */
     build(): ERC20Token<TTokenChainId> {
         if (this.#addresses.size === 0) {
             throw new ChainUtilsFault(

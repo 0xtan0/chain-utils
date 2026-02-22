@@ -43,4 +43,7 @@ export const erc20ErrorsAbi = [
     },
 ] as const;
 
+/**
+ * Type alias for the ERC20 custom error ABI literal.
+ */
 export type ERC20ErrorsAbi = typeof erc20ErrorsAbi;

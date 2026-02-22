@@ -28,6 +28,20 @@ import { erc20Abi } from "../abi/erc20Abi.js";
 import { ERC20BoundToken } from "../token/erc20Token.js";
 import { ERC20ReadClient } from "./erc20ReadClient.js";
 
+/**
+ * Multichain ERC20 client facade.
+ *
+ * Coordinates one `IERC20Read` per chain and returns aggregate
+ * cross-chain results without failing the full request when one chain errors.
+ *
+ * @template TChainId Literal union of configured chain IDs.
+ *
+ * @example
+ * ```ts
+ * const client = createERC20MultichainClient([mainnetClient, baseClient] as const);
+ * const balances = await client.getBalanceAcrossChains(token, holder, [1, 8453]);
+ * ```
+ */
 export class ERC20MultichainClient<TChainId extends number>
     implements IERC20MultichainClient<TChainId>
 {
@@ -36,6 +50,11 @@ export class ERC20MultichainClient<TChainId extends number>
 
     readonly #clients: ReadonlyMap<TChainId, IERC20Read>;
 
+    /**
+     * @param {ReadonlyMap<TChainId, IERC20Read>} clients Per-chain read clients.
+     * @param {MultichainContract<ERC20Abi, TChainId>} multichain Underlying multichain contract facade.
+     * @returns {ERC20MultichainClient<TChainId>} Multichain ERC20 client.
+     */
     constructor(
         clients: ReadonlyMap<TChainId, IERC20Read>,
         multichain: MultichainContract<ERC20Abi, TChainId>,
@@ -45,6 +64,13 @@ export class ERC20MultichainClient<TChainId extends number>
         this.chainIds = [...clients.keys()];
     }
 
+    /**
+     * Returns the read client for one chain.
+     *
+     * @param {TChainId} chainId Chain ID to resolve.
+     * @returns {IERC20Read} Chain-scoped ERC20 read client.
+     * @throws {UnsupportedChain} Thrown when `chainId` is not configured.
+     */
     getClient(chainId: TChainId): IERC20Read {
         const client = this.#clients.get(chainId);
         if (!client) {
@@ -55,10 +81,24 @@ export class ERC20MultichainClient<TChainId extends number>
         return client;
     }
 
+    /**
+     * Checks whether a chain is configured.
+     *
+     * @param {number} chainId Chain ID to test.
+     * @returns {boolean} `true` when chain exists in this client.
+     */
     hasChain(chainId: number): boolean {
         return this.#clients.has(chainId as TChainId);
     }
 
+    /**
+     * Reads one token balance for one holder across target chains.
+     *
+     * @param {Address} token Token address used on all target chains.
+     * @param {Address} holder Holder wallet address.
+     * @param {ReadonlyArray<TChainId>} chainIds Target chain IDs.
+     * @returns {Promise<CrossChainBatchResult<BatchBalanceResult>>} Per-chain balance batch results.
+     */
     async getBalanceAcrossChains(
         token: Address,
         holder: Address,
@@ -67,6 +107,12 @@ export class ERC20MultichainClient<TChainId extends number>
         return this.#runAcrossChains(chainIds, (client) => client.getBalances([{ token, holder }]));
     }
 
+    /**
+     * Executes grouped balance queries across chains.
+     *
+     * @param {ReadonlyArray<BalanceQuery & { chainId: TChainId }>} queries Balance queries with explicit chain IDs.
+     * @returns {Promise<CrossChainBatchResult<BatchBalanceResult>>} Per-chain balance batch results.
+     */
     async getBalances(
         queries: ReadonlyArray<BalanceQuery & { chainId: TChainId }>,
     ): Promise<CrossChainBatchResult<BatchBalanceResult>> {
@@ -77,6 +123,12 @@ export class ERC20MultichainClient<TChainId extends number>
         });
     }
 
+    /**
+     * Executes grouped allowance queries across chains.
+     *
+     * @param {ReadonlyArray<AllowanceQuery & { chainId: TChainId }>} queries Allowance queries with explicit chain IDs.
+     * @returns {Promise<CrossChainBatchResult<BatchAllowanceResult>>} Per-chain allowance batch results.
+     */
     async getAllowances(
         queries: ReadonlyArray<AllowanceQuery & { chainId: TChainId }>,
     ): Promise<CrossChainBatchResult<BatchAllowanceResult>> {
@@ -87,6 +139,15 @@ export class ERC20MultichainClient<TChainId extends number>
         });
     }
 
+    /**
+     * Reads token balance across the overlap between token and client chains.
+     *
+     * @template TTokenChainId Token definition chain union (subset of client chains).
+     * @param {ITokenDefinition<TTokenChainId>} token Token definition.
+     * @param {Address} holder Holder wallet address.
+     * @param {ReadonlyArray<TTokenChainId>} [chainIds] Optional target subset. Defaults to chain overlap.
+     * @returns {Promise<CrossChainBatchResult<TokenBalance>>} Per-chain token balance results.
+     */
     async getTokenBalance<TTokenChainId extends TChainId>(
         token: ITokenDefinition<TTokenChainId>,
         holder: Address,
@@ -98,6 +159,16 @@ export class ERC20MultichainClient<TChainId extends number>
         );
     }
 
+    /**
+     * Reads token allowance across the overlap between token and client chains.
+     *
+     * @template TTokenChainId Token definition chain union (subset of client chains).
+     * @param {ITokenDefinition<TTokenChainId>} token Token definition.
+     * @param {Address} owner Token owner address.
+     * @param {Address} spender Spender address.
+     * @param {ReadonlyArray<TTokenChainId>} [chainIds] Optional target subset. Defaults to chain overlap.
+     * @returns {Promise<CrossChainBatchResult<BatchAllowanceResult>>} Per-chain allowance results.
+     */
     async getTokenAllowance<TTokenChainId extends TChainId>(
         token: ITokenDefinition<TTokenChainId>,
         owner: Address,
@@ -112,6 +183,16 @@ export class ERC20MultichainClient<TChainId extends number>
         );
     }
 
+    /**
+     * Creates an `ERC20Token` bound to this multichain client.
+     *
+     * @template TTokenChainId Token definition chain union (subset of client chains).
+     * @param {ITokenDefinition<TTokenChainId>} token Token definition to bind.
+     * @param {boolean} [returnIntersectionChains=false] When `true`, returns only valid chain intersections instead of strict matching.
+     * @returns {ERC20Token<TTokenChainId>} Bound token helper.
+     * @throws {Error} Thrown when no chain overlap exists or token metadata is incomplete.
+     * @throws {ChainUtilsFault} Thrown when strict matching is required and some overlap chains are missing from the multichain RPC client.
+     */
     forToken<TTokenChainId extends TChainId>(
         token: ITokenDefinition<TTokenChainId>,
         returnIntersectionChains = false,
@@ -222,18 +303,46 @@ export class ERC20MultichainClient<TChainId extends number>
     }
 }
 
-/** Create from pre-built PublicClients. */
+/**
+ * Creates a multichain ERC20 client from pre-built public clients.
+ *
+ * @template TClients Readonly tuple of clients with literal chain IDs.
+ * @param {TClients} clients Public clients.
+ * @param {ERC20MultichainClientOptions} [options] Decoder and multicall options applied to all chains.
+ * @returns {IERC20MultichainClient<TClients[number]["chain"]["id"]>} Multichain ERC20 client.
+ * @throws {ChainUtilsFault} Thrown when duplicate chain IDs are provided.
+ * @throws {Error} Propagates RPC client construction failures.
+ */
 export function createERC20MultichainClient<const TClients extends readonly { chain: Chain }[]>(
     clients: TClients,
     options?: ERC20MultichainClientOptions,
 ): IERC20MultichainClient<TClients[number]["chain"]["id"]>;
 
-/** Create from ChainTransportConfig array. */
+/**
+ * Creates a multichain ERC20 client from chain transport configs.
+ *
+ * @template TConfigs Readonly tuple of configs with literal chain IDs.
+ * @param {TConfigs} configs Chain transport configs.
+ * @param {ERC20MultichainClientOptions} [options] Decoder and multicall options applied to all chains.
+ * @returns {IERC20MultichainClient<TConfigs[number]["chain"]["id"]>} Multichain ERC20 client.
+ * @throws {ChainUtilsFault} Thrown when duplicate chain IDs are provided.
+ * @throws {Error} Propagates RPC client construction failures.
+ */
 export function createERC20MultichainClient<const TConfigs extends readonly ChainTransportConfig[]>(
     configs: TConfigs,
     options?: ERC20MultichainClientOptions,
 ): IERC20MultichainClient<TConfigs[number]["chain"]["id"]>;
 
+/**
+ * Creates a multichain ERC20 client from mixed public-client and config inputs.
+ *
+ * @template TChainId Literal union of configured chain IDs.
+ * @param {readonly (PublicClient<Transport, Chain> | ChainTransportConfig)[]} inputs Chain inputs.
+ * @param {ERC20MultichainClientOptions} [options] Decoder and multicall options applied to all chains.
+ * @returns {IERC20MultichainClient<TChainId>} Multichain ERC20 client.
+ * @throws {ChainUtilsFault} Thrown when duplicate chain IDs are provided.
+ * @throws {Error} Propagates client-construction and downstream initialization failures.
+ */
 export function createERC20MultichainClient<TChainId extends number>(
     inputs: readonly (PublicClient<Transport, Chain> | ChainTransportConfig)[],
     options?: ERC20MultichainClientOptions,
