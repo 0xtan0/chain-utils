@@ -33,7 +33,7 @@ jobs:
 
             - name: Publish release
               if: inputs.release-type == 'release'
-              run: pnpm changeset:publish
+              run: pnpm changeset publish
 
             - name: Create git tags
               if: inputs.release-type == 'release'
@@ -60,8 +60,10 @@ jobs:
 
             - name: Set canary versions
               if: inputs.release-type == 'canary'
-              run: pnpm changeset version --snapshot canary
+              run: |
+                  SHORT_HASH=$(git rev-parse --short HEAD)
+                  pnpm changeset version --snapshot "canary-${SHORT_HASH}"
 
             - name: Publish canary
               if: inputs.release-type == 'canary'
-              run: pnpm changeset:publish --tag canary --no-git-tag
+              run: pnpm changeset publish --tag canary --no-git-tag
