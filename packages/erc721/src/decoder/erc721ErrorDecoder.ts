@@ -1,6 +1,6 @@
 import type { ChainUtilsFault, ErrorDecoder } from "@0xtan0/chain-utils/core";
 import type { Abi, Hex } from "viem";
-import { ContractReverted } from "@0xtan0/chain-utils/core";
+import { ContractReverted, formatDecodedErrorArgs } from "@0xtan0/chain-utils/core";
 import { decodeErrorResult } from "viem";
 
 import { erc721ErrorsAbi } from "../abi/erc721ErrorsAbi.js";
@@ -83,7 +83,7 @@ export class ERC721ErrorDecoder implements ErrorDecoder {
                 data: rawData,
             });
 
-            const argsStr = decoded.args ? ` (${decoded.args.join(", ")})` : "";
+            const argsStr = formatDecodedErrorArgs(decoded.args);
             return new ContractReverted({
                 rawData,
                 decodedMessage: `${decoded.errorName}${argsStr}`,

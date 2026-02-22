@@ -130,6 +130,57 @@ describe("ERC20ErrorDecoder", () => {
             const result = decoderWithCustom.decode(rawData);
             expect(result).toBeInstanceOf(InsufficientBalance);
         });
+
+        it("formats complex custom error args with nested tuples and arrays", () => {
+            const complexCustomAbi = [
+                {
+                    type: "error" as const,
+                    name: "ComplexFailure",
+                    inputs: [
+                        { name: "account", type: "address" as const },
+                        { name: "amounts", type: "uint256[]" as const },
+                        {
+                            name: "details",
+                            type: "tuple" as const,
+                            components: [
+                                { name: "id", type: "uint256" as const },
+                                { name: "active", type: "bool" as const },
+                                { name: "note", type: "string" as const },
+                            ],
+                        },
+                        {
+                            name: "history",
+                            type: "tuple[]" as const,
+                            components: [
+                                { name: "amount", type: "uint256" as const },
+                                { name: "ok", type: "bool" as const },
+                            ],
+                        },
+                    ],
+                },
+            ];
+            const complexDecoder = new ERC20ErrorDecoder(complexCustomAbi);
+            const rawData = encodeErrorResult({
+                abi: complexCustomAbi,
+                errorName: "ComplexFailure",
+                args: [
+                    address,
+                    [1n, 2n],
+                    { id: 9n, active: true, note: "nested" },
+                    [{ amount: 4n, ok: false }],
+                ],
+            });
+
+            const result = complexDecoder.decode(rawData);
+
+            expect(result).toBeInstanceOf(ContractReverted);
+            const decodedMessage = (result as ContractReverted).decodedMessage;
+            expect(decodedMessage).toContain("ComplexFailure (");
+            expect(decodedMessage).toContain(`"${address}"`);
+            expect(decodedMessage).toContain("[1n, 2n]");
+            expect(decodedMessage).toContain('{ active: true, id: 9n, note: "nested" }');
+            expect(decodedMessage).toContain("[{ amount: 4n, ok: false }]");
+        });
     });
 
     describe("legacy string reverts", () => {
