@@ -23,14 +23,30 @@ import {
  *   2. Custom error ABI (user-provided)
  *   3. Legacy string revert messages
  *   4. Returns null if unrecognized
+ *
+ * @example
+ * ```ts
+ * const decoder = new ERC721ErrorDecoder();
+ * const decoded = decoder.decode(rawData);
+ * ```
  */
 export class ERC721ErrorDecoder implements ErrorDecoder {
     private readonly customErrorAbi?: Abi;
 
+    /**
+     * @param {Abi} [customErrorAbi] Optional project-specific custom error ABI.
+     * @returns {ERC721ErrorDecoder} ERC721 revert decoder.
+     */
     constructor(customErrorAbi?: Abi) {
         this.customErrorAbi = customErrorAbi;
     }
 
+    /**
+     * Decodes raw revert bytes into a typed fault.
+     *
+     * @param {Hex} rawData Raw revert data (`0x`-prefixed hex).
+     * @returns {ChainUtilsFault | null} Decoded fault, or `null` when payload is unknown.
+     */
     decode(rawData: Hex): ChainUtilsFault | null {
         return (
             this.decodeStandardErrors(rawData) ??

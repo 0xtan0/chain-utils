@@ -178,4 +178,7 @@ export const erc721Abi = [
     },
 ] as const;
 
+/**
+ * Type alias for the standard ERC721 ABI literal.
+ */
 export type ERC721Abi = typeof erc721Abi;

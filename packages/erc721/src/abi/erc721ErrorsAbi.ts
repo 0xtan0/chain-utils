@@ -52,4 +52,7 @@ export const erc721ErrorsAbi = [
     },
 ] as const;
 
+/**
+ * Type alias for the ERC721 custom error ABI literal.
+ */
 export type ERC721ErrorsAbi = typeof erc721ErrorsAbi;
