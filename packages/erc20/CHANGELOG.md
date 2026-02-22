@@ -1,5 +1,11 @@
 # @0xtan0/chain-utils-erc20
 
+## 0.1.2
+
+### Patch Changes
+
+-   f74bea5: add more chains to USDC and USDT and also add support for WETH
+
 ## 0.1.1
 
 ### Patch Changes
