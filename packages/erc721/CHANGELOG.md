@@ -1,5 +1,13 @@
 # @0xtan0/chain-utils-erc721
 
+## 0.1.1
+
+### Patch Changes
+
+-   057c036: Set Repository for each package in package.json
+-   Updated dependencies [057c036]
+    -   @0xtan0/chain-utils-core@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
