@@ -1,6 +1,110 @@
 # @0xtan0/chain-utils
 
 Type-safe EVM utilities for [viem](https://viem.sh/) with focused packages for core primitives, ERC-20, and ERC-721.
+Built for both developers and agents that need readable code and predictable, low-overhead RPC execution.
+
+## Motivation
+
+Most teams start with direct `viem` calls, then quickly run into repeated ABI boilerplate, chain-by-chain branching, and unnecessary RPC fan-out for common reads. This library was built to keep the same low-level control while making multichain flows feel like application code, with multicall-first batch reads by default (when supported) to reduce request volume and cost.
+
+## Highlights
+
+-   Multicall-first batch reads on supported chains, with automatic fallback when multicall is unavailable.
+-   Typed multichain orchestration so one call can query many chains in parallel.
+-   Deterministic result and error shapes that are easy for services and agents to reason about.
+-   TypeScript-first APIs that catch invalid chain/token usage at compile time.
+
+## TypeScript Safety
+
+```ts
+import { createERC20MultichainClient, defineToken, USDC } from "@0xtan0/chain-utils/erc20";
+import { createPublicClient, http } from "viem";
+import { arbitrum, mainnet, optimism } from "viem/chains";
+
+const mainnetRpc = createPublicClient({ chain: mainnet, transport: http() });
+const opRpc = createPublicClient({ chain: optimism, transport: http() });
+const arbRpc = createPublicClient({ chain: arbitrum, transport: http() });
+
+const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
+const usdc = multichain.forToken(USDC);
+
+await usdc.getBalances([alice, bob]); // one call, all configured chains
+
+multichain.getClient(mainnet.id); // ok
+
+const WETH_TYPED = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
+    .onChain(mainnet, "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")
+    .onChain(optimism, "0x4200000000000000000000000000000000000006")
+    .build();
+
+WETH_TYPED.address(mainnet.id); // ok
+
+// @ts-expect-error This token definition has no Arbitrum mapping
+WETH_TYPED.address(arbitrum.id);
+```
+
+## Example
+
+Without a shared multichain abstraction, balance checks for multiple holders quickly become repetitive per-chain contract reads:
+
+```ts
+const [
+    mainnetAliceBalance,
+    mainnetBobBalance,
+    opAliceBalance,
+    opBobBalance,
+    arbAliceBalance,
+    arbBobBalance,
+] = await Promise.all([
+    mainnetClient.readContract({
+        address: USDC_MAINNET,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [alice],
+    }),
+    mainnetClient.readContract({
+        address: USDC_MAINNET,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [bob],
+    }),
+    optimismClient.readContract({
+        address: USDC_OPTIMISM,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [alice],
+    }),
+    optimismClient.readContract({
+        address: USDC_OPTIMISM,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [bob],
+    }),
+    arbitrumClient.readContract({
+        address: USDC_ARBITRUM,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [alice],
+    }),
+    arbitrumClient.readContract({
+        address: USDC_ARBITRUM,
+        abi: erc20Abi,
+        functionName: "balanceOf",
+        args: [bob],
+    }),
+]);
+```
+
+With `chain-utils`, the token definition and chain mapping live in one place, and batch/multichain flows are built in:
+
+```ts
+import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils/erc20";
+
+const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
+const usdc = multichain.forToken(USDC);
+
+const balances = await usdc.getBalances([alice, bob]);
+```
 
 ## Packages
 
@@ -18,9 +122,15 @@ pnpm add @0xtan0/chain-utils/erc20 viem
 
 ## Quick Start
 
-### Define a token
+### Use a token definition
 
-A `TokenDefinition` is pure data — no RPC, no side effects. Define it once in a shared module and import it everywhere.
+A `TokenDefinition` is pure data — no RPC, no side effects. For common tokens, import a prebuilt definition:
+
+```ts
+import { USDC, USDT } from "@0xtan0/chain-utils/erc20";
+```
+
+Or define your own token mapping:
 
 ```ts
 import { defineToken } from "@0xtan0/chain-utils/erc20";
@@ -33,25 +143,19 @@ const WETH = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
     .build();
 ```
 
-Common tokens like `USDC` and `USDT` are included out of the box:
-
-```ts
-import { USDC, USDT } from "@0xtan0/chain-utils/erc20";
-```
-
 ### Single-chain reads
 
 Create a read client for one chain and query balances, allowances, and metadata.
 
 ```ts
-import { createERC20Client } from "@0xtan0/chain-utils/erc20";
+import { createERC20Client, USDC } from "@0xtan0/chain-utils/erc20";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 
 const rpc = createPublicClient({ chain: mainnet, transport: http() });
 const client = createERC20Client({ client: rpc });
 
-const tokenAddress = WETH.address(mainnet.id);
+const tokenAddress = USDC.address(mainnet.id);
 
 const metadata = await client.getTokenMetadata(tokenAddress);
 const supply = await client.getTotalSupply(tokenAddress);
@@ -64,12 +168,12 @@ const allowance = await client.getAllowance(tokenAddress, owner, spender);
 One client, multiple chains. All RPC calls fire in parallel.
 
 ```ts
-import { createERC20MultichainClient } from "@0xtan0/chain-utils/erc20";
+import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils/erc20";
 
 const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
 
 // Single holder, all chains at once
-const balances = await multichain.getTokenBalance(WETH, alice);
+const balances = await multichain.getTokenBalance(USDC, alice);
 
 for (const [chainId, balance] of balances.resultsByChain) {
     console.log(`Chain ${chainId}: ${balance.balance}`);
@@ -81,16 +185,16 @@ for (const [chainId, balance] of balances.resultsByChain) {
 Attach RPC connections to a token definition for zero-config reads.
 
 ```ts
-const weth = multichain.forToken(WETH);
+const usdc = multichain.forToken(USDC);
 
-console.log(weth.symbol); // "WETH"
-console.log(weth.chainIds); // [1, 10, 42161]
+console.log(usdc.symbol); // "USDC"
+console.log(usdc.chainIds); // [1, 10, 42161]
 
 // Balance across all bound chains
-const balances = await weth.getBalance(alice);
+const balances = await usdc.getBalance(alice);
 
 // Multiple holders at once
-const all = await weth.getBalances([alice, bob]);
+const all = await usdc.getBalances([alice, bob]);
 ```
 
 ### Transfers (convenience)

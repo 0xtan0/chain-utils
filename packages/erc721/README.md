@@ -1,6 +1,6 @@
 # @0xtan0/chain-utils/erc721
 
-Type-safe ERC-721 utilities for [viem](https://viem.sh/).
+Type-safe ERC-721 utilities for [viem](https://viem.sh/) for both developers and agents.
 
 This package provides:
 
@@ -16,6 +16,73 @@ Built on top of `@0xtan0/chain-utils/core`.
 
 ```bash
 pnpm add @0xtan0/chain-utils/erc721 viem
+```
+
+## Highlights
+
+-   Typed read and write clients remove repetitive `readContract` and `writeContract` wiring.
+-   Batch reads are multicall-first by default (with safe fallback behavior), and keep per-item success/failure results.
+-   Collection-bound readers/writers eliminate repeated `collection` arguments when working on a single NFT contract.
+-   Standard transaction helpers (`prepare`, `sign`, `send`, `wait`) keep write flows consistent.
+-   Token ID and batch query shapes are checked by TypeScript.
+
+## TypeScript Safety
+
+```ts
+import { createERC721Client } from "@0xtan0/chain-utils/erc721";
+import { createPublicClient, http } from "viem";
+import { mainnet } from "viem/chains";
+
+const publicClient = createPublicClient({ chain: mainnet, transport: http() });
+const reader = createERC721Client({ client: publicClient });
+const collection = "0x1234567890abcdef1234567890abcdef12345678";
+
+await reader.getOwnerOf(collection, 42n); // ok
+
+// @ts-expect-error tokenId must be bigint
+await reader.getOwnerOf(collection, 42);
+
+await reader.getOwners([{ collection, tokenId: 1n }]); // ok
+
+// @ts-expect-error batch tokenId must be bigint
+await reader.getOwners([{ collection, tokenId: "1" }]);
+
+const bound = reader.forCollection(collection);
+await bound.getTokenURIs([1n, 2n, 3n]); // ok
+
+// @ts-expect-error token ID lists must be bigint[]
+await bound.getTokenURIs([1, 2, 3]);
+```
+
+### Example
+
+Manual batch ownership checks usually become repeated one-by-one calls:
+
+```ts
+const tokenIds = [1n, 2n, 3n];
+const owners = await Promise.all(
+    tokenIds.map((tokenId) =>
+        publicClient.readContract({
+            abi: erc721Abi,
+            address: collection,
+            functionName: "ownerOf",
+            args: [tokenId],
+        }),
+    ),
+);
+```
+
+With `erc721`, the same query is a single typed batch call:
+
+```ts
+const reader = createERC721Client({ client: publicClient });
+const batch = await reader.getOwners(tokenIds.map((tokenId) => ({ collection, tokenId })));
+
+for (const result of batch.results) {
+    if (result.status === "success") {
+        console.log(result.result);
+    }
+}
 ```
 
 ## Scope and Behavior

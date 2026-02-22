@@ -1,13 +1,98 @@
 # @0xtan0/chain-utils/core
 
-Low-level multichain client primitives for [viem](https://viem.sh/). Handles RPC connections, contract reads/writes, multicall batching, and the prepare/sign/send pipeline.
+Low-level multichain client primitives for [viem](https://viem.sh/). It handles RPC connections, contract reads/writes, multicall batching, and the `prepare -> sign -> send` pipeline.
 
-This package is the foundation that higher-level packages (like `@0xtan0/chain-utils/erc20`) build on top of.
+This package is the foundation for higher-level packages (like `@0xtan0/chain-utils/erc20`) and is designed for both application developers and autonomous agents.
 
 ## Install
 
 ```bash
 pnpm add @0xtan0/chain-utils/core viem
+```
+
+## Highlights
+
+-   `createMultichainClient` keeps chain wiring in one typed object instead of scattered per-chain conditionals.
+-   `ContractClient.readBatch` is multicall-first by default on chains with Multicall3, then falls back to sequential reads if needed.
+-   A single write flow (`prepare`, `sign`, `send`, `waitForReceipt`) removes ad-hoc transaction plumbing.
+-   Chain IDs and ABI function signatures are enforced at compile time.
+
+## TypeScript Safety
+
+```ts
+import { createContractClient, createMultichainClient } from "@0xtan0/chain-utils/core";
+import { createPublicClient, http } from "viem";
+import { arbitrum, mainnet, optimism } from "viem/chains";
+
+const publicClient = createPublicClient({ chain: mainnet, transport: http() });
+const contractAddress = "0x0000000000000000000000000000000000000000";
+
+const multichain = createMultichainClient([
+    createPublicClient({ chain: mainnet, transport: http() }),
+    createPublicClient({ chain: optimism, transport: http() }),
+] as const);
+
+// @ts-expect-error Chain 42161 is not configured in this multichain client
+multichain.getPublicClient(arbitrum.id);
+
+const counterAbi = [
+    {
+        type: "function",
+        name: "count",
+        stateMutability: "view",
+        inputs: [],
+        outputs: [{ type: "uint256" }],
+    },
+    {
+        type: "function",
+        name: "increment",
+        stateMutability: "nonpayable",
+        inputs: [],
+        outputs: [],
+    },
+] as const;
+
+const client = createContractClient({ abi: counterAbi, publicClient });
+
+await client.read(contractAddress, "count"); // ok
+
+// @ts-expect-error count() takes no arguments
+await client.read(contractAddress, "count", [1n]);
+```
+
+### Example
+
+Manual reads usually mean repeated `readContract` calls and custom error handling:
+
+```ts
+const [tokenABalance, tokenBBalance] = await Promise.all([
+    publicClient.readContract({
+        abi: erc20Abi,
+        address: tokenA,
+        functionName: "balanceOf",
+        args: [account],
+    }),
+    publicClient.readContract({
+        abi: erc20Abi,
+        address: tokenB,
+        functionName: "balanceOf",
+        args: [account],
+    }),
+]);
+```
+
+With `core`, the same flow is one typed batch call:
+
+```ts
+const client = createContractClient({
+    abi: erc20Abi,
+    publicClient,
+});
+
+const batch = await client.readBatch([
+    { address: tokenA, functionName: "balanceOf", args: [account] },
+    { address: tokenB, functionName: "balanceOf", args: [account] },
+]);
 ```
 
 ## Usage
