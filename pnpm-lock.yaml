@@ -74,7 +74,7 @@ importers:
 
     packages/erc20:
         dependencies:
-            "@0xtan0/chain-utils/core":
+            "@0xtan0/chain-utils-core":
                 specifier: workspace:*
                 version: link:../core
             viem:
@@ -83,7 +83,7 @@ importers:
 
     packages/erc721:
         dependencies:
-            "@0xtan0/chain-utils/core":
+            "@0xtan0/chain-utils-core":
                 specifier: workspace:*
                 version: link:../core
             viem:

@@ -2,7 +2,7 @@ import type {
     ChainTransportConfig,
     CrossChainBatchResult,
     MultichainContract,
-} from "@0xtan0/chain-utils/core";
+} from "@0xtan0/chain-utils-core";
 import type { Address, Chain, PublicClient, Transport } from "viem";
 import {
     ChainUtilsFault,
@@ -10,7 +10,7 @@ import {
     createMultichainContract,
     MultichainClient,
     UnsupportedChain,
-} from "@0xtan0/chain-utils/core";
+} from "@0xtan0/chain-utils-core";
 
 import type { ERC20Abi } from "../abi/erc20Abi.js";
 import type { IERC20MultichainClient, IERC20Read } from "../types/client.js";

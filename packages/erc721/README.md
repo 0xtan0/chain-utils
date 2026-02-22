@@ -1,4 +1,4 @@
-# @0xtan0/chain-utils/erc721
+# @0xtan0/chain-utils-erc721
 
 Type-safe ERC-721 utilities for [viem](https://viem.sh/) for both developers and agents.
 
@@ -10,12 +10,12 @@ This package provides:
 -   transaction helpers (`prepare`, `sign`, `send`, `wait`) and one-shot write methods
 -   typed decoding for known ERC-721 custom errors
 
-Built on top of `@0xtan0/chain-utils/core`.
+Built on top of `@0xtan0/chain-utils-core`.
 
 ## Install
 
 ```bash
-pnpm add @0xtan0/chain-utils/erc721 viem
+pnpm add @0xtan0/chain-utils-erc721 viem
 ```
 
 ## Highlights
@@ -29,7 +29,7 @@ pnpm add @0xtan0/chain-utils/erc721 viem
 ## TypeScript Safety
 
 ```ts
-import { createERC721Client } from "@0xtan0/chain-utils/erc721";
+import { createERC721Client } from "@0xtan0/chain-utils-erc721";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 
@@ -104,7 +104,7 @@ import {
     createERC721Client,
     createERC721WriteClient,
     NonexistentToken,
-} from "@0xtan0/chain-utils/erc721";
+} from "@0xtan0/chain-utils-erc721";
 import { createPublicClient, createWalletClient, http } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { mainnet } from "viem/chains";
@@ -179,7 +179,7 @@ import {
     createERC721CollectionReader,
     createERC721CollectionWriter,
     createERC721WriteClient,
-} from "@0xtan0/chain-utils/erc721";
+} from "@0xtan0/chain-utils-erc721";
 
 const reader = createERC721Client({ client: publicClient });
 const writer = createERC721WriteClient({ client: publicClient, walletClient });

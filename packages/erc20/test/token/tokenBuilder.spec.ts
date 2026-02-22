@@ -2,7 +2,7 @@ import type { ITokenDefinition } from "@/types/tokenDefinition.js";
 import type { Address, Chain } from "viem";
 import { InvalidAddress } from "@/errors/contract.js";
 import { defineToken } from "@/token/tokenBuilder.js";
-import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault } from "@0xtan0/chain-utils-core";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 const mainnet = {

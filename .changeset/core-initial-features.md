@@ -1,5 +1,5 @@
 ---
-"@0xtan0/chain-utils/core": minor
+"@0xtan0/chain-utils-core": minor
 ---
 
 Initial release of the core package with multichain client primitives for viem.

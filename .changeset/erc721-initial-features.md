@@ -1,5 +1,5 @@
 ---
-"@0xtan0/chain-utils/erc721": minor
+"@0xtan0/chain-utils-erc721": minor
 ---
 
 Initial release of the ERC-721 package with type-safe NFT utilities for read/write operations and collection binding.

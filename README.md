@@ -17,7 +17,7 @@ Most teams start with direct `viem` calls, then quickly run into repeated ABI bo
 ## TypeScript Safety
 
 ```ts
-import { createERC20MultichainClient, defineToken, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20MultichainClient, defineToken, USDC } from "@0xtan0/chain-utils-erc20";
 import { createPublicClient, http } from "viem";
 import { arbitrum, mainnet, optimism } from "viem/chains";
 
@@ -98,7 +98,7 @@ const [
 With `chain-utils`, the token definition and chain mapping live in one place, and batch/multichain flows are built in:
 
 ```ts
-import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils-erc20";
 
 const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
 const usdc = multichain.forToken(USDC);
@@ -110,14 +110,14 @@ const balances = await usdc.getBalances([alice, bob]);
 
 | Package                      | Description                                                      |
 | ---------------------------- | ---------------------------------------------------------------- |
-| `@0xtan0/chain-utils/core`   | Shared multichain client primitives                              |
-| `@0xtan0/chain-utils/erc20`  | ERC-20 read/write clients, token definitions, multichain queries |
-| `@0xtan0/chain-utils/erc721` | ERC-721 read/write clients with bound collection reader/writer   |
+| `@0xtan0/chain-utils-core`   | Shared multichain client primitives                              |
+| `@0xtan0/chain-utils-erc20`  | ERC-20 read/write clients, token definitions, multichain queries |
+| `@0xtan0/chain-utils-erc721` | ERC-721 read/write clients with bound collection reader/writer   |
 
 ## Install
 
 ```bash
-pnpm add @0xtan0/chain-utils/erc20 viem
+pnpm add @0xtan0/chain-utils-erc20 viem
 ```
 
 ## Quick Start
@@ -127,13 +127,13 @@ pnpm add @0xtan0/chain-utils/erc20 viem
 A `TokenDefinition` is pure data — no RPC, no side effects. For common tokens, import a prebuilt definition:
 
 ```ts
-import { USDC, USDT } from "@0xtan0/chain-utils/erc20";
+import { USDC, USDT } from "@0xtan0/chain-utils-erc20";
 ```
 
 Or define your own token mapping:
 
 ```ts
-import { defineToken } from "@0xtan0/chain-utils/erc20";
+import { defineToken } from "@0xtan0/chain-utils-erc20";
 import { arbitrum, mainnet, optimism } from "viem/chains";
 
 const WETH = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
@@ -148,7 +148,7 @@ const WETH = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
 Create a read client for one chain and query balances, allowances, and metadata.
 
 ```ts
-import { createERC20Client, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20Client, USDC } from "@0xtan0/chain-utils-erc20";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 
@@ -168,7 +168,7 @@ const allowance = await client.getAllowance(tokenAddress, owner, spender);
 One client, multiple chains. All RPC calls fire in parallel.
 
 ```ts
-import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils-erc20";
 
 const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
 
@@ -202,7 +202,7 @@ const all = await usdc.getBalances([alice, bob]);
 One call handles the full lifecycle: simulate, estimate gas, sign, broadcast, and wait.
 
 ```ts
-import { createERC20WriteClient } from "@0xtan0/chain-utils/erc20";
+import { createERC20WriteClient } from "@0xtan0/chain-utils-erc20";
 import { createWalletClient, http } from "viem";
 
 const wallet = createWalletClient({

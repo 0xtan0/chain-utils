@@ -1,5 +1,5 @@
 import type { Address, Chain, PublicClient, Transport } from "viem";
-import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils-core";
 
 import type { ERC20Token } from "../types/erc20Token.js";
 import type { ITokenDefinition } from "../types/tokenDefinition.js";

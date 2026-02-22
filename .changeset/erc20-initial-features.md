@@ -1,5 +1,5 @@
 ---
-"@0xtan0/chain-utils/erc20": minor
+"@0xtan0/chain-utils-erc20": minor
 ---
 
 Initial release of the ERC-20 package with type-safe token utilities for reads, writes, and multichain operations.

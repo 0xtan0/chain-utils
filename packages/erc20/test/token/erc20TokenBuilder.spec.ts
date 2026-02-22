@@ -4,7 +4,7 @@ import type { Address, Chain, PublicClient, Transport } from "viem";
 import { InvalidAddress } from "@/errors/contract.js";
 import { ERC20TokenBuilder } from "@/token/erc20TokenBuilder.js";
 import { defineToken } from "@/token/tokenBuilder.js";
-import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils-core";
 import { describe, expect, expectTypeOf, it, vi } from "vitest";
 
 const USDC_MAINNET = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address;

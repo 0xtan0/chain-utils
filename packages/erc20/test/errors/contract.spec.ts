@@ -1,6 +1,6 @@
 import type { Address } from "viem";
 import { InvalidAddress, NotERC20Contract } from "@/errors/contract.js";
-import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault } from "@0xtan0/chain-utils-core";
 import { describe, expect, it } from "vitest";
 
 describe("InvalidAddress", () => {

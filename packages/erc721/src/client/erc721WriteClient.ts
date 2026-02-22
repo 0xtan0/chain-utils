@@ -2,7 +2,7 @@ import type {
     PreparedTransaction,
     SignedTransaction,
     WriteOptions,
-} from "@0xtan0/chain-utils/core";
+} from "@0xtan0/chain-utils-core";
 import type { Address, Hash, Hex, TransactionReceipt } from "viem";
 
 import type { IERC721CollectionWriter, IERC721WriteClient } from "../types/client.js";

@@ -7,7 +7,7 @@ import {
     InvalidSender,
     InvalidSpender,
 } from "@/errors/revert.js";
-import { ChainUtilsFault, ContractReverted } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault, ContractReverted } from "@0xtan0/chain-utils-core";
 import { describe, expect, it } from "vitest";
 
 const address = "0x1234567890abcdef1234567890abcdef12345678" as Address;

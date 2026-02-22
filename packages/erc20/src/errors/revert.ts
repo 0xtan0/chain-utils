@@ -1,5 +1,5 @@
 import type { Address, Hex } from "viem";
-import { ContractReverted } from "@0xtan0/chain-utils/core";
+import { ContractReverted } from "@0xtan0/chain-utils-core";
 
 /**
  * Error thrown when transfer amount exceeds sender balance.

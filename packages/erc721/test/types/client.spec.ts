@@ -30,7 +30,7 @@ import type {
     MultichainContract,
     PreparedTransaction,
     SignedTransaction,
-} from "@0xtan0/chain-utils/core";
+} from "@0xtan0/chain-utils-core";
 import type { Hash, TransactionReceipt } from "viem";
 import { describe, expectTypeOf, it } from "vitest";
 

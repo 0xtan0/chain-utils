@@ -11,7 +11,7 @@ import {
     InvalidSender,
     NonexistentToken,
 } from "@/errors/revert.js";
-import { ContractReverted } from "@0xtan0/chain-utils/core";
+import { ContractReverted } from "@0xtan0/chain-utils-core";
 import { encodeAbiParameters, encodeErrorResult, getAddress } from "viem";
 import { describe, expect, it } from "vitest";
 

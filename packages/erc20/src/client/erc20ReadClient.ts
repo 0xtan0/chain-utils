@@ -1,6 +1,6 @@
-import type { ContractClient, MulticallItemResult } from "@0xtan0/chain-utils/core";
+import type { ContractClient, MulticallItemResult } from "@0xtan0/chain-utils-core";
 import type { Address, WalletClient } from "viem";
-import { CompositeErrorDecoder, createContractClient } from "@0xtan0/chain-utils/core";
+import { CompositeErrorDecoder, createContractClient } from "@0xtan0/chain-utils-core";
 
 import type { ERC20Abi } from "../abi/erc20Abi.js";
 import type { IERC20Read } from "../types/client.js";

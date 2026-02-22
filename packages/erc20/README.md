@@ -1,13 +1,13 @@
-# @0xtan0/chain-utils/erc20
+# @0xtan0/chain-utils-erc20
 
 Type-safe ERC-20 utilities for [viem](https://viem.sh/). Define a token once, query balances across every chain, and execute transfers with full type safety.
 
-Built on top of `@0xtan0/chain-utils/core` for production app code and agent-driven automation flows.
+Built on top of `@0xtan0/chain-utils-core` for production app code and agent-driven automation flows.
 
 ## Install
 
 ```bash
-pnpm add @0xtan0/chain-utils/erc20 viem
+pnpm add @0xtan0/chain-utils-erc20 viem
 ```
 
 ## Highlights
@@ -21,7 +21,7 @@ pnpm add @0xtan0/chain-utils/erc20 viem
 ## TypeScript Safety
 
 ```ts
-import { createERC20MultichainClient, defineToken } from "@0xtan0/chain-utils/erc20";
+import { createERC20MultichainClient, defineToken } from "@0xtan0/chain-utils-erc20";
 import { createPublicClient, http } from "viem";
 import { arbitrum, mainnet, optimism } from "viem/chains";
 
@@ -115,7 +115,7 @@ const [
 With `erc20`, one token definition and one call handle the same flow:
 
 ```ts
-import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils-erc20";
 
 const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
 const usdc = multichain.forToken(USDC);
@@ -130,13 +130,13 @@ const balances = await usdc.getBalances([alice, bob]);
 A `TokenDefinition` is pure data — no RPC, no side effects. For common tokens, import a prebuilt definition:
 
 ```ts
-import { USDC, USDT } from "@0xtan0/chain-utils/erc20";
+import { USDC, USDT } from "@0xtan0/chain-utils-erc20";
 ```
 
 Or define your own token mapping:
 
 ```ts
-import { defineToken } from "@0xtan0/chain-utils/erc20";
+import { defineToken } from "@0xtan0/chain-utils-erc20";
 import { arbitrum, mainnet, optimism } from "viem/chains";
 
 const WETH = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
@@ -149,7 +149,7 @@ const WETH = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
 ### Single-chain reads
 
 ```ts
-import { createERC20Client, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20Client, USDC } from "@0xtan0/chain-utils-erc20";
 import { createPublicClient, http } from "viem";
 import { mainnet } from "viem/chains";
 
@@ -168,7 +168,7 @@ const allow = await client.getAllowance(tokenAddress, owner, spender);
 One client, multiple chains. All RPC calls fire in parallel.
 
 ```ts
-import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20MultichainClient, USDC } from "@0xtan0/chain-utils-erc20";
 
 const multichain = createERC20MultichainClient([mainnetRpc, opRpc, arbRpc]);
 
@@ -211,7 +211,7 @@ const all = await usdc.getBalances([alice, bob]);
 One call handles simulate, estimate gas, sign, broadcast, and wait.
 
 ```ts
-import { createERC20WriteClient, USDC } from "@0xtan0/chain-utils/erc20";
+import { createERC20WriteClient, USDC } from "@0xtan0/chain-utils-erc20";
 import { createWalletClient, http } from "viem";
 
 const wallet = createWalletClient({ chain: mainnet, transport: http(), account });

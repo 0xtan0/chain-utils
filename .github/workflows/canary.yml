@@ -1,0 +1,34 @@
+name: Canary Release
+
+on:
+    workflow_dispatch:
+
+concurrency:
+    group: ${{github.workflow}}-${{github.ref}}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        uses: ./.github/workflows/build.yml
+
+    lint:
+        uses: ./.github/workflows/lint.yml
+        needs: build
+
+    test:
+        uses: ./.github/workflows/test.yml
+        needs: lint
+
+    test-integration:
+        uses: ./.github/workflows/test-integration.yml
+        needs: lint
+
+    publish:
+        name: Publish canary
+        needs: [test, test-integration]
+        uses: ./.github/workflows/publish.yml
+        with:
+            release-type: canary
+        permissions:
+            contents: read
+            id-token: write
