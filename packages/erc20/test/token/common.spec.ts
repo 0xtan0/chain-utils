@@ -67,9 +67,8 @@ describe("USDT", () => {
         expect(USDT.decimals).toBe(6);
     });
 
-    it("has 4 chains configured (no base)", () => {
-        expect(USDT.chainIds).toHaveLength(4);
-        expect(USDT.hasChain(8453)).toBe(false);
+    it("has 6 chains configured", () => {
+        expect(USDT.chainIds).toHaveLength(6);
     });
 
     it("returns correct addresses per chain", () => {
@@ -77,9 +76,11 @@ describe("USDT", () => {
         expect(USDT.address(10)).toBe("0x94b008aA00579c1307B0EF2c499aD98a8ce58e58");
         expect(USDT.address(42161)).toBe("0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9");
         expect(USDT.address(137)).toBe("0xc2132D05D31c914a87C6611C10748AEb04B58e8F");
+        expect(USDT.address(200901)).toBe("0xfe9f969faf8Ad72a83b761138bF25dE87eFF9DD2");
+        expect(USDT.address(42220)).toBe("0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e");
     });
 
     it("has correct type", () => {
-        expectTypeOf(USDT).toEqualTypeOf<ITokenDefinition<1 | 10 | 42161 | 137>>();
+        expectTypeOf(USDT).toEqualTypeOf<ITokenDefinition<1 | 10 | 42161 | 137 | 200901 | 42220>>();
     });
 });

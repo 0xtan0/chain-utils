@@ -4,6 +4,7 @@ import {
     base,
     bitlayer,
     bob,
+    celo,
     mainnet,
     optimism,
     polygon,
@@ -46,12 +47,14 @@ export const WETH = defineToken("WETH", { name: "Wrapped Ether", decimals: 18 })
     .build();
 
 /**
- * USDT — Tether USD.
- * Type: ITokenDefinition<1 | 10 | 42161 | 137>
+ * USDT — Tether USD EVM chains.
+ * Type: ITokenDefinition<1 | 10 | 42161 | 137 | 200901 | 42220>
  */
 export const USDT = defineToken("USDT", { name: "Tether USD", decimals: 6 })
     .onChain(mainnet, "0xdAC17F958D2ee523a2206206994597C13D831ec7")
     .onChain(optimism, "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58")
     .onChain(arbitrum, "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9")
     .onChain(polygon, "0xc2132D05D31c914a87C6611C10748AEb04B58e8F")
+    .onChain(bitlayer, "0xfe9f969faf8Ad72a83b761138bF25dE87eFF9DD2")
+    .onChain(celo, "0x48065fbBE25f71C9282ddf5e1cD6D6A887483D5e")
     .build();
