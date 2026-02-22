@@ -1,4 +1,4 @@
-import type { ErrorDecoder } from "@/decoder/errorDecoder.js";
+import type { ErrorDecoder } from "@/types/errorDecoder.js";
 import type { Hex } from "viem";
 import { CompositeErrorDecoder } from "@/decoder/compositeDecoder.js";
 import { ChainUtilsFault } from "@/errors/base.js";

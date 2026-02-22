@@ -7,24 +7,38 @@ import { UnsupportedChain } from "../errors/chain.js";
 import { resolveChainFromConfig } from "../utils/chain.js";
 
 /**
- * A typed collection of PublicClients keyed by chain ID.
+ * Typed registry of `PublicClient` instances keyed by chain ID.
  *
- * No ABI awareness — just RPC connections.
- * Use this as the entry point for multichain setups,
- * then build token-specific or contract-specific clients on top.
+ * This class is ABI-agnostic and focuses only on chain-aware RPC access.
  *
- * TChainId is a union of literal chain IDs captured at creation time.
+ * @template TChainId Literal union of configured chain IDs.
+ *
+ * @example
+ * ```ts
+ * const multichain = createMultichainClient([mainnetClient, baseClient] as const);
+ * const mainnetRpc = multichain.getPublicClient(1);
+ * ```
  */
 export class MultichainClient<TChainId extends number> {
     readonly chainIds: ReadonlyArray<TChainId>;
     private readonly clients: ReadonlyMap<TChainId, PublicClient<Transport, Chain>>;
 
+    /**
+     * @param {ReadonlyMap<TChainId, PublicClient<Transport, Chain>>} clients Public clients keyed by chain ID.
+     * @returns {MultichainClient<TChainId>} A multichain RPC client container.
+     */
     constructor(clients: ReadonlyMap<TChainId, PublicClient<Transport, Chain>>) {
         this.clients = clients;
         this.chainIds = [...clients.keys()];
     }
 
-    /** Get the PublicClient for a specific chain. */
+    /**
+     * Returns the `PublicClient` configured for a chain.
+     *
+     * @param {TChainId} chainId Chain identifier to resolve.
+     * @returns {PublicClient<Transport, Chain>} The configured public client for `chainId`.
+     * @throws {UnsupportedChain} Thrown when `chainId` is not configured.
+     */
     getPublicClient(chainId: TChainId): PublicClient<Transport, Chain> {
         const client = this.clients.get(chainId);
         if (!client) {
@@ -35,14 +49,22 @@ export class MultichainClient<TChainId extends number> {
         return client;
     }
 
-    /** Check if a chain is configured. */
+    /**
+     * Checks whether a chain ID is configured.
+     *
+     * @param {number} chainId Chain identifier to test.
+     * @returns {boolean} `true` when a client exists for the chain.
+     */
     hasChain(chainId: number): boolean {
         return this.clients.has(chainId as TChainId);
     }
 
     /**
-     * Returns a new MultichainClient with an additional chain.
-     * Immutable — does not mutate the current instance.
+     * Returns a new immutable instance with an additional chain client.
+     *
+     * @template TNewChainId New chain ID literal type.
+     * @param {PublicClient<Transport, Chain>} client Public client to add.
+     * @returns {MultichainClient<TChainId | TNewChainId>} New client set including the added chain.
      */
     withChain<TNewChainId extends number>(
         client: PublicClient<Transport, Chain>,
@@ -56,16 +78,39 @@ export class MultichainClient<TChainId extends number> {
     }
 }
 
-/** Create from pre-built PublicClients (most common). */
+/**
+ * Creates a `MultichainClient` from pre-built public clients.
+ *
+ * @template TClients Readonly tuple of clients with literal chain IDs.
+ * @param {TClients} clients Public clients to index by `client.chain.id`.
+ * @returns {MultichainClient<TClients[number]["chain"]["id"]>} Typed multichain client.
+ * @throws {ChainUtilsFault} Thrown when duplicate chain IDs are provided.
+ */
 export function createMultichainClient<const TClients extends readonly { chain: Chain }[]>(
     clients: TClients,
 ): MultichainClient<TClients[number]["chain"]["id"]>;
 
-/** Create from ChainTransportConfig array (library creates PublicClients internally). */
+/**
+ * Creates a `MultichainClient` from transport configs.
+ *
+ * @template TConfigs Readonly tuple of chain transport configs with literal chain IDs.
+ * @param {TConfigs} configs Config entries used to create `PublicClient` instances internally.
+ * @returns {MultichainClient<TConfigs[number]["chain"]["id"]>} Typed multichain client.
+ * @throws {ChainUtilsFault} Thrown when duplicate chain IDs are provided.
+ */
 export function createMultichainClient<const TConfigs extends readonly ChainTransportConfig[]>(
     configs: TConfigs,
 ): MultichainClient<TConfigs[number]["chain"]["id"]>;
 
+/**
+ * Creates a `MultichainClient` from mixed `PublicClient` and transport-config inputs.
+ *
+ * @template TChainId Literal union of chain IDs in `inputs`.
+ * @param {readonly (PublicClient<Transport, Chain> | ChainTransportConfig)[]} inputs Chain client inputs.
+ * @returns {MultichainClient<TChainId>} New multichain client instance.
+ * @throws {ChainUtilsFault} Thrown when duplicate chain IDs are provided.
+ * @throws {Error} Propagates client-construction failures from viem when building clients from configs.
+ */
 export function createMultichainClient<TChainId extends number>(
     inputs: readonly (PublicClient<Transport, Chain> | ChainTransportConfig)[],
 ): MultichainClient<TChainId> {

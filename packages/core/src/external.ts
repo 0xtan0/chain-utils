@@ -14,7 +14,7 @@ export { MulticallPartialFailure, MulticallBatchFailure } from "./errors/multica
 export { ContractReverted } from "./errors/revert.js";
 
 // ---- Decoder ----
-export type { ErrorDecoder } from "./decoder/errorDecoder.js";
+export type { ErrorDecoder } from "./types/errorDecoder.js";
 export { CompositeErrorDecoder } from "./decoder/compositeDecoder.js";
 
 // ---- Utils ----

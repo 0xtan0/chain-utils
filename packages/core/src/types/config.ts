@@ -1,11 +1,11 @@
 import type { Address, Chain, PublicClient, Transport } from "viem";
 
 /**
- * Shorthand for when the user doesn't want to create a PublicClient themselves.
- * The library creates the client internally from chain + transport.
+ * Transport configuration used to lazily create a `PublicClient` for a chain.
  *
- * When you already have a PublicClient, pass it directly — no wrapper needed.
- * The chain is already embedded in PublicClient.chain.
+ * @property {Chain} chain Chain metadata used by viem and by the generated client.
+ * @property {Transport} transport Transport factory used when creating the `PublicClient`.
+ * @property {Address} [multicallAddress] Optional multicall override applied before client creation.
  */
 export interface ChainTransportConfig {
     readonly chain: Chain;
@@ -14,7 +14,9 @@ export interface ChainTransportConfig {
 }
 
 /**
- * What the factories accept: either a pre-built PublicClient
- * (chain is already in client.chain) or a ChainTransportConfig shorthand.
+ * Accepted chain input for multichain factories.
+ *
+ * Use a pre-built `PublicClient` when client lifecycle is managed externally,
+ * or `ChainTransportConfig` when the library should build the client.
  */
 export type ChainInput = PublicClient<Transport, Chain> | ChainTransportConfig;

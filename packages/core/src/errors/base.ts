@@ -1,6 +1,16 @@
 /**
- * Base error for all chain-utils errors.
- * Provides structured error info compatible with viem's error.walk() pattern.
+ * Base error type for all chain-utils failures.
+ *
+ * This class normalizes error messages while preserving the original `cause`.
+ * It is compatible with viem-style cause traversal through `walk`.
+ *
+ * @example
+ * ```ts
+ * throw new ChainUtilsFault("Invalid chain configuration", {
+ *   details: "Missing transport for chain 1",
+ *   metaMessages: ["Chain ID: 1"],
+ * });
+ * ```
  */
 export class ChainUtilsFault extends Error {
     override readonly name: string = "ChainUtilsFault";
@@ -8,6 +18,11 @@ export class ChainUtilsFault extends Error {
     readonly details: string;
     readonly metaMessages?: string[];
 
+    /**
+     * @param {string} shortMessage Human-readable summary of the failure.
+     * @param {{ cause?: Error; details?: string; metaMessages?: string[] }} [options] Extra context for debugging.
+     * @returns {ChainUtilsFault} A structured chain-utils error instance.
+     */
     constructor(
         shortMessage: string,
         options?: {
@@ -32,9 +47,18 @@ export class ChainUtilsFault extends Error {
         this.metaMessages = metaMessages;
     }
 
-    /** Walk the cause chain, returning the deepest cause. */
+    /**
+     * Walks the cause chain and returns the deepest nested error.
+     *
+     * @returns {Error} The deepest error in the cause chain.
+     */
     walk(): Error;
-    /** Walk the cause chain, returning the first error matching the predicate. */
+    /**
+     * Walks the cause chain and returns the first error matching a predicate.
+     *
+     * @param {(err: unknown) => boolean} fn Predicate used to match an error in the chain.
+     * @returns {Error | null} The first matching error, or `null` when no match is found.
+     */
     walk(fn: (err: unknown) => boolean): Error | null;
     walk(fn?: (err: unknown) => boolean): Error | null {
         if (!fn) {

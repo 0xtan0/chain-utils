@@ -1,4 +1,4 @@
-import type { ErrorDecoder } from "@/decoder/errorDecoder.js";
+import type { ErrorDecoder } from "@/types/errorDecoder.js";
 import type { Abi, Address, Hash, Hex, WalletClient } from "viem";
 import { ContractClient, createContractClient } from "@/client/contractClient.js";
 import { ChainUtilsFault } from "@/errors/base.js";
