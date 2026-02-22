@@ -3,6 +3,11 @@
     "version": "0.1.0",
     "private": false,
     "description": "",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/0xtan0/chain-utils",
+        "directory": "packages/core"
+    },
     "license": "MIT",
     "author": "Wonderland",
     "type": "module",

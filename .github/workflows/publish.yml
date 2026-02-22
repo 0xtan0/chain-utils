@@ -15,6 +15,7 @@ permissions:
 jobs:
     publish:
         name: Publish (${{inputs.release-type}})
+        environment: publisher
         runs-on: ubuntu-latest
         permissions:
             contents: write
@@ -23,11 +24,17 @@ jobs:
             - name: Checkout
               uses: actions/checkout@v4
 
-            - name: Setup environment
-              uses: ./.github/actions/setup
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  run_install: false
 
-            - name: Install npm
-              run: npm install -g npm@11.7.0
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+                  registry-url: "https://registry.npmjs.org"
 
             - name: Install dependencies
               run: pnpm install --frozen-lockfile

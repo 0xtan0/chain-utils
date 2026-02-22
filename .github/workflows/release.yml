@@ -62,6 +62,12 @@ jobs:
               env:
                   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+            - name: Add RELEASE label to PR
+              if: steps.changesets.outputs.pullRequestNumber
+              run: gh pr edit ${{steps.changesets.outputs.pullRequestNumber}} --add-label "RELEASE"
+              env:
+                  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
     publish:
         name: Publish to npm
         needs: release
