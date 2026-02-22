@@ -104,4 +104,7 @@ export const erc20Abi = [
     },
 ] as const;
 
+/**
+ * Type alias for the standard ERC20 ABI literal.
+ */
 export type ERC20Abi = typeof erc20Abi;

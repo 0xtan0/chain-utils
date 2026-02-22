@@ -9,6 +9,8 @@ import type { TokenBalance } from "./token.js";
  *
  * Created via ERC20TokenBuilder or ERC20MultichainClient.forToken().
  * TChainId is a subset of the MultichainClient's supported chains.
+ *
+ * @template TChainId Literal union of chain IDs this token is bound to.
  */
 export interface ERC20Token<TChainId extends number> {
     /** Token symbol (e.g. "USDC"). */
@@ -23,7 +25,13 @@ export interface ERC20Token<TChainId extends number> {
     /** All chain IDs this token is bound on. */
     readonly chainIds: ReadonlyArray<TChainId>;
 
-    /** Get the token's address on a specific chain. */
+    /**
+     * Returns token address for a chain.
+     *
+     * @param {TChainId} chainId Target chain ID.
+     * @returns {Address} Token address for that chain.
+     * @throws {ChainUtilsFault} Thrown when the token is not bound on the requested chain.
+     */
     getAddress(chainId: TChainId): Address;
 
     // ---- On-chain reads (uses the bound MultichainClient RPCs) ----
@@ -31,6 +39,10 @@ export interface ERC20Token<TChainId extends number> {
     /**
      * Fetch balance across all bound chains (or a subset).
      * Uses the MultichainClient's RPC connections.
+     *
+     * @param {Address} holder Holder wallet address.
+     * @param {ReadonlyArray<TChainId>} [chainIds] Optional chain subset. Defaults to all bound chains.
+     * @returns {Promise<CrossChainBatchResult<TokenBalance>>} Per-chain success/failure balance results.
      */
     getBalance(
         holder: Address,
@@ -39,6 +51,10 @@ export interface ERC20Token<TChainId extends number> {
 
     /**
      * Fetch balances for multiple holders across all bound chains (or a subset).
+     *
+     * @param {ReadonlyArray<Address>} holders Holder wallet addresses.
+     * @param {ReadonlyArray<TChainId>} [chainIds] Optional chain subset. Defaults to all bound chains.
+     * @returns {Promise<CrossChainBatchResult<BatchBalanceResult>>} Per-chain success/failure batch results.
      */
     getBalances(
         holders: ReadonlyArray<Address>,
@@ -47,6 +63,11 @@ export interface ERC20Token<TChainId extends number> {
 
     /**
      * Fetch allowance across all bound chains (or a subset).
+     *
+     * @param {Address} owner Token owner address.
+     * @param {Address} spender Spender address.
+     * @param {ReadonlyArray<TChainId>} [chainIds] Optional chain subset. Defaults to all bound chains.
+     * @returns {Promise<CrossChainBatchResult<BatchAllowanceResult>>} Per-chain success/failure allowance results.
      */
     getAllowance(
         owner: Address,
