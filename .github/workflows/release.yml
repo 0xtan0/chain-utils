@@ -72,9 +72,59 @@ jobs:
         name: Publish to npm
         needs: release
         if: needs.release.outputs.should-publish == 'true'
-        uses: ./.github/workflows/publish.yml
-        with:
-            release-type: release
+        runs-on: ubuntu-latest
+        environment: publisher
         permissions:
             contents: write
             id-token: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  run_install: false
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: pnpm
+                  registry-url: "https://registry.npmjs.org"
+
+            - name: Upgrade npm for OIDC support
+              run: npm install -g npm@latest
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build
+              run: pnpm build
+
+            - name: Publish
+              run: pnpm changeset publish
+              env:
+                  NPM_CONFIG_PROVENANCE: "true"
+
+            - name: Create git tags
+              run: |
+                  for pkg in packages/*/package.json; do
+                      NAME=$(node -e "console.log(require('./$pkg').name.replace('@0xtan0/chain-utils-', ''))")
+                      VERSION=$(node -e "console.log(require('./$pkg').version)")
+                      TAG="${NAME}-${VERSION}"
+
+                      if git rev-parse "$TAG" >/dev/null 2>&1; then
+                          echo "Tag $TAG already exists, skipping"
+                      else
+                          git tag "$TAG"
+                          echo "Created tag $TAG"
+                      fi
+                  done
+
+                  git push origin --tags
+
+                  echo "### Tags pushed" >> "$GITHUB_STEP_SUMMARY"
+                  git tag --points-at HEAD | while read -r tag; do
+                      echo "- \`$tag\`" >> "$GITHUB_STEP_SUMMARY"
+                  done
