@@ -1,5 +1,11 @@
 # @0xtan0/chain-utils-core
 
+## 0.1.1
+
+### Patch Changes
+
+-   057c036: Set Repository for each package in package.json
+
 ## 0.1.0
 
 ### Minor Changes
