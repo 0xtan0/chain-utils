@@ -49,7 +49,7 @@ export { ERC20BoundToken } from "./token/erc20Token.js";
 export { ERC20TokenBuilder } from "./token/erc20TokenBuilder.js";
 
 // ---- Pre-Built Token Definitions ----
-export { USDC, USDT } from "./token/common.js";
+export { USDC, USDT, WETH } from "./token/common.js";
 
 // ---- Error Decoder ----
 export { ERC20ErrorDecoder } from "./decoder/erc20ErrorDecoder.js";

@@ -1,5 +1,5 @@
 import type { ITokenDefinition } from "@/types/tokenDefinition.js";
-import { USDC, USDT } from "@/token/common.js";
+import { USDC, USDT, WETH } from "@/token/common.js";
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 describe("USDC", () => {
@@ -23,6 +23,29 @@ describe("USDC", () => {
 
     it("has correct type", () => {
         expectTypeOf(USDC).toEqualTypeOf<ITokenDefinition<1 | 10 | 42161 | 8453 | 137>>();
+    });
+});
+
+describe("WETH", () => {
+    it("has correct symbol, name, and decimals", () => {
+        expect(WETH.symbol).toBe("WETH");
+        expect(WETH.name).toBe("Wrapped Ether");
+        expect(WETH.decimals).toBe(18);
+    });
+
+    it("has 4 chains configured", () => {
+        expect(WETH.chainIds).toHaveLength(4);
+    });
+
+    it("returns correct addresses per chain", () => {
+        expect(WETH.address(1)).toBe("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2");
+        expect(WETH.address(10)).toBe("0x4200000000000000000000000000000000000006");
+        expect(WETH.address(42161)).toBe("0x82aF49447D8a07e3bd95BD0d56f35241523fBab1");
+        expect(WETH.address(8453)).toBe("0x4200000000000000000000000000000000000006");
+    });
+
+    it("has correct type", () => {
+        expectTypeOf(WETH).toEqualTypeOf<ITokenDefinition<1 | 10 | 42161 | 8453>>();
     });
 });
 

@@ -34,6 +34,7 @@ describe("public API", () => {
         const mod = await import("@/index.js");
         expect(mod.USDC).toBeDefined();
         expect(mod.USDT).toBeDefined();
+        expect(mod.WETH).toBeDefined();
     });
 
     it("exports error decoder", async () => {
