@@ -1,7 +1,7 @@
 import type { Address } from "viem";
 import { InvalidAddress, NotERC721Contract, NotERC721Enumerable } from "@/errors/contract.js";
 import { validateAddress } from "@/helpers/validateAddress.js";
-import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault } from "@0xtan0/chain-utils-core";
 import { getAddress } from "viem";
 import { describe, expect, it } from "vitest";
 

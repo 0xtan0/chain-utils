@@ -1,5 +1,5 @@
 import type { Address, Chain } from "viem";
-import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault } from "@0xtan0/chain-utils-core";
 
 import type { TokenMetadata, TokenReference } from "../types/token.js";
 import type { ITokenDefinition } from "../types/tokenDefinition.js";

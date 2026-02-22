@@ -1,4 +1,4 @@
-import type { MulticallItemResult } from "@0xtan0/chain-utils/core";
+import type { MulticallItemResult } from "@0xtan0/chain-utils-core";
 import type { Address, Hex } from "viem";
 
 import type { TokenURIResult } from "./token.js";

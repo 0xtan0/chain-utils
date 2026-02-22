@@ -5,7 +5,7 @@ import type {
     ERC721MultichainClientOptions,
     ERC721WriteClientOptions,
 } from "@/types/options.js";
-import type { ErrorDecoder } from "@0xtan0/chain-utils/core";
+import type { ErrorDecoder } from "@0xtan0/chain-utils-core";
 import type { Abi, Address, Chain, PublicClient, Transport, WalletClient } from "viem";
 import { describe, expectTypeOf, it } from "vitest";
 

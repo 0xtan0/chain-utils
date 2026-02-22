@@ -1,13 +1,13 @@
-# @0xtan0/chain-utils/core
+# @0xtan0/chain-utils-core
 
 Low-level multichain client primitives for [viem](https://viem.sh/). It handles RPC connections, contract reads/writes, multicall batching, and the `prepare -> sign -> send` pipeline.
 
-This package is the foundation for higher-level packages (like `@0xtan0/chain-utils/erc20`) and is designed for both application developers and autonomous agents.
+This package is the foundation for higher-level packages (like `@0xtan0/chain-utils-erc20`) and is designed for both application developers and autonomous agents.
 
 ## Install
 
 ```bash
-pnpm add @0xtan0/chain-utils/core viem
+pnpm add @0xtan0/chain-utils-core viem
 ```
 
 ## Highlights
@@ -20,7 +20,7 @@ pnpm add @0xtan0/chain-utils/core viem
 ## TypeScript Safety
 
 ```ts
-import { createContractClient, createMultichainClient } from "@0xtan0/chain-utils/core";
+import { createContractClient, createMultichainClient } from "@0xtan0/chain-utils-core";
 import { createPublicClient, http } from "viem";
 import { arbitrum, mainnet, optimism } from "viem/chains";
 
@@ -102,7 +102,7 @@ const batch = await client.readBatch([
 A typed collection of `PublicClient`s keyed by chain ID. Chain IDs are captured at the type level, so invalid references are compile-time errors.
 
 ```ts
-import { createMultichainClient } from "@0xtan0/chain-utils/core";
+import { createMultichainClient } from "@0xtan0/chain-utils-core";
 import { createPublicClient, http } from "viem";
 import { arbitrum, mainnet, optimism } from "viem/chains";
 
@@ -137,7 +137,7 @@ const expanded = multichain.withChain(polygonClient);
 Type-safe wrapper around viem's contract interactions. Supports reads, batched multicall, and the full write pipeline.
 
 ```ts
-import { createContractClient } from "@0xtan0/chain-utils/core";
+import { createContractClient } from "@0xtan0/chain-utils-core";
 
 const client = createContractClient({
     abi: myAbi,

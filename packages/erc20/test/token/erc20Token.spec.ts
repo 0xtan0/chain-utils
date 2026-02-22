@@ -1,6 +1,6 @@
 import type { Address, Chain, PublicClient, Transport } from "viem";
 import { ERC20BoundToken } from "@/token/erc20Token.js";
-import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils-core";
 import { describe, expect, it, vi } from "vitest";
 
 const TOKEN_MAINNET = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address;

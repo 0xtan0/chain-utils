@@ -1,7 +1,7 @@
 {
-    "name": "@0xtan0/chain-utils/erc20",
+    "name": "@0xtan0/chain-utils-erc20",
     "version": "0.0.1",
-    "private": true,
+    "private": false,
     "description": "",
     "license": "MIT",
     "author": "Wonderland",
@@ -35,7 +35,7 @@
         "test:cov": "vitest run --config vitest.config.ts --coverage"
     },
     "dependencies": {
-        "@0xtan0/chain-utils/core": "workspace:*",
+        "@0xtan0/chain-utils-core": "workspace:*",
         "viem": "2.45.1"
     }
 }

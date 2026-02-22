@@ -5,7 +5,7 @@ import type {
     PreparedTransaction,
     SignedTransaction,
     WriteOptions,
-} from "@0xtan0/chain-utils/core";
+} from "@0xtan0/chain-utils-core";
 import type { Address, Hash, Hex, TransactionReceipt } from "viem";
 
 import type { ERC721Abi } from "../abi/erc721Abi.js";

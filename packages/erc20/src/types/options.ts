@@ -1,4 +1,4 @@
-import type { ErrorDecoder } from "@0xtan0/chain-utils/core";
+import type { ErrorDecoder } from "@0xtan0/chain-utils-core";
 import type { Abi, Chain, PublicClient, Transport, WalletClient } from "viem";
 
 /**

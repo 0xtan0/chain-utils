@@ -1,6 +1,6 @@
-import type { ChainUtilsFault, ErrorDecoder } from "@0xtan0/chain-utils/core";
+import type { ChainUtilsFault, ErrorDecoder } from "@0xtan0/chain-utils-core";
 import type { Abi, Hex } from "viem";
-import { ContractReverted, formatDecodedErrorArgs } from "@0xtan0/chain-utils/core";
+import { ContractReverted, formatDecodedErrorArgs } from "@0xtan0/chain-utils-core";
 import { decodeErrorResult } from "viem";
 
 import { erc20ErrorsAbi } from "../abi/erc20ErrorsAbi.js";

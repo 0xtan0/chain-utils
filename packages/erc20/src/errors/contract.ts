@@ -1,5 +1,5 @@
 import type { Address } from "viem";
-import { ChainUtilsFault } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault } from "@0xtan0/chain-utils-core";
 
 /**
  * Error thrown when an address input is not a valid EVM address.

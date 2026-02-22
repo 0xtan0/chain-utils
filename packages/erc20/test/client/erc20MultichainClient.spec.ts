@@ -14,7 +14,7 @@ import {
     MultichainClient,
     MultichainContract,
     UnsupportedChain,
-} from "@0xtan0/chain-utils/core";
+} from "@0xtan0/chain-utils-core";
 import { describe, expect, it, vi } from "vitest";
 
 const TOKEN = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48" as Address;

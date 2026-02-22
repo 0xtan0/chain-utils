@@ -1,6 +1,6 @@
-import type { CrossChainBatchResult } from "@0xtan0/chain-utils/core";
+import type { CrossChainBatchResult } from "@0xtan0/chain-utils-core";
 import type { Address, Chain, PublicClient, Transport } from "viem";
-import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils/core";
+import { ChainUtilsFault, MultichainClient } from "@0xtan0/chain-utils-core";
 
 import type { IERC20Read } from "../types/client.js";
 import type { ERC20Token } from "../types/erc20Token.js";
